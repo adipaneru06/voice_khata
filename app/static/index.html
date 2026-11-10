@@ -118,23 +118,67 @@
         padding: 0;
         background-color: #131313;
         color: #e5e2e1;
-        overscroll-behavior-y: none;
-        overflow-x: hidden;
+        scroll-behavior: smooth;
       }
       .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
       .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
       main > :first-child { margin-top: 0 !important; }
       main > :last-child { margin-bottom: 0 !important; }
     }
-    ::-webkit-scrollbar { display: none; }
+
+    /* Visible sleek modern scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #18181b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3f3f46;
+      border-radius: 9999px;
+      border: 2px solid #18181b;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6366f1;
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #3f3f46 #18181b;
+    }
+
+    @keyframes soundwave {
+      0%, 100% { height: 8px; }
+      50% { height: 32px; }
+    }
+    .wave-bar {
+      width: 4px;
+      border-radius: 9999px;
+      background: linear-gradient(180deg, #818cf8 0%, #c084fc 100%);
+      animation: soundwave 1s ease-in-out infinite;
+    }
+    .wave-bar:nth-child(1) { animation-delay: 0.0s; height: 12px; }
+    .wave-bar:nth-child(2) { animation-delay: 0.15s; height: 24px; }
+    .wave-bar:nth-child(3) { animation-delay: 0.3s; height: 32px; }
+    .wave-bar:nth-child(4) { animation-delay: 0.45s; height: 18px; }
+    .wave-bar:nth-child(5) { animation-delay: 0.2s; height: 28px; }
+    .wave-bar:nth-child(6) { animation-delay: 0.35s; height: 14px; }
+
+    @keyframes orb-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.35; }
+      50% { transform: scale(1.12); opacity: 0.65; }
+    }
+    .orb-glow {
+      animation: orb-pulse 3s ease-in-out infinite;
+    }
   </style>
 </head>
-<body class="bg-surface font-body-md text-body-md text-on-surface antialiased flex flex-col items-center min-h-screen overflow-x-hidden">
-  <div class="w-full max-w-[480px] min-h-screen relative flex flex-col bg-surface overflow-x-hidden">
+<body class="bg-surface font-body-md text-body-md text-on-surface antialiased min-h-screen">
+  <div class="w-full max-w-4xl min-h-screen relative flex flex-col bg-surface mx-auto">
 
     <!-- Top App Header -->
-    <header class="fixed top-0 w-full max-w-[480px] z-50 bg-surface border-b border-surface-container-high pt-safe">
-      <div class="h-14 px-margin flex items-center justify-between">
+    <header class="fixed top-0 inset-x-0 z-50 bg-surface/95 backdrop-blur-md border-b border-surface-container-high pt-safe">
+      <div class="max-w-4xl mx-auto h-16 px-4 sm:px-6 flex items-center justify-between">
         <div class="flex items-center gap-space-sm min-w-0">
           <!-- Back button: only visible in confirm & ledger views per Section 13 -->
           <button id="header-back-btn" aria-label="Go back" class="hidden w-11 h-11 -ml-space-xs flex items-center justify-center text-on-surface hover:text-primary transition-colors" type="button">
@@ -145,17 +189,22 @@
             <span id="shop-name-header" class="font-label-sm text-label-sm text-on-surface-variant truncate">My Shop</span>
           </div>
         </div>
-        <div class="flex items-center gap-space-sm shrink-0">
+        <div class="flex items-center gap-2 shrink-0">
+          <!-- Manual Entry Button -->
+          <button id="btn-manual-entry" onclick="window.openManualEntry && window.openManualEntry(window.state?.currentView === 'ledger' ? (window.state?.currentCustomerName || '') : '')" aria-label="Add manual entry" class="h-9 px-2.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 font-label-md text-label-md flex items-center gap-1 transition-all active:scale-95 cursor-pointer" type="button">
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            <span class="font-medium">New Entry</span>
+          </button>
           <!-- Settings icon (visual only per Section 13) -->
-          <button aria-label="Settings" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-low text-on-surface-variant hover:text-on-surface transition-colors" type="button">
-            <span class="material-symbols-outlined text-[20px]">settings</span>
+          <button aria-label="Settings" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-container-low text-on-surface-variant hover:text-on-surface transition-colors" type="button">
+            <span class="material-symbols-outlined text-[18px]">storefront</span>
           </button>
         </div>
       </div>
     </header>
 
     <!-- Error Notification Banner with Retry Button -->
-    <div id="error-banner" class="hidden fixed top-16 inset-x-0 max-w-[480px] mx-auto z-50 px-margin">
+    <div id="error-banner" class="hidden fixed top-20 inset-x-0 max-w-4xl mx-auto z-50 px-4 sm:px-6">
       <div class="bg-error-container border border-error text-on-error-container p-space-sm rounded-lg flex items-center justify-between text-body-sm gap-2">
         <div class="flex items-center gap-space-xs min-w-0 flex-1">
           <span class="material-symbols-outlined text-[18px] shrink-0 text-error">error</span>
@@ -177,73 +226,118 @@
       <div id="view-home" class="flex flex-col w-full px-margin pb-space-xl">
 
         <!-- Summary Metric Card -->
-        <section class="mt-space-md w-full bg-surface-container-low rounded-lg p-space-md grid grid-cols-2">
+        <section class="mt-space-md w-full bg-gradient-to-br from-surface-container-low to-surface-container rounded-xl p-space-md border border-white/5 shadow-sm grid grid-cols-2 gap-3">
           <!-- Left: Total Udhaar -->
-          <div class="flex flex-col pr-space-md">
-            <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total udhaar</span>
-            <div class="mt-space-xs flex items-baseline">
-              <span id="metric-total-udhaar" class="font-headline-lg text-headline-lg text-error font-medium [font-variant-numeric:tabular-nums]">₹0</span>
+          <div class="flex flex-col pr-2 border-r border-surface-container-high/60">
+            <div class="flex items-center gap-1.5 text-red-400">
+              <span class="material-symbols-outlined text-[15px]">trending_up</span>
+              <span class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-medium">Total Udhaar</span>
             </div>
+            <div class="mt-1 flex items-baseline">
+              <span id="metric-total-udhaar" class="text-[26px] leading-tight text-red-400 font-semibold font-mono tracking-tight [font-variant-numeric:tabular-nums]">₹0</span>
+            </div>
+            <span class="text-[10px] text-on-surface-variant/70 mt-0.5">बाकी वसूली</span>
           </div>
           <!-- Right: Customers -->
-          <div class="flex flex-col pl-space-md">
-            <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Customers</span>
-            <div class="mt-space-xs flex items-baseline">
-              <span id="metric-customer-count" class="font-headline-lg text-headline-lg text-on-surface font-medium [font-variant-numeric:tabular-nums]">0 active</span>
+          <div class="flex flex-col pl-2">
+            <div class="flex items-center gap-1.5 text-indigo-400">
+              <span class="material-symbols-outlined text-[15px]">group</span>
+              <span class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-medium">Customers</span>
             </div>
+            <div class="mt-1 flex items-baseline">
+              <span id="metric-customer-count" class="text-[26px] leading-tight text-on-surface font-semibold font-mono tracking-tight [font-variant-numeric:tabular-nums]">0 active</span>
+            </div>
+            <span class="text-[10px] text-on-surface-variant/70 mt-0.5">सक्रिय खाते</span>
           </div>
         </section>
 
         <!-- Voice Core Console (Idle / Recording / Processing states) -->
-        <section class="w-full flex flex-col items-center justify-center my-space-xl">
+        <section class="w-full flex flex-col items-center justify-center my-6">
 
           <!-- State A: Idle State -->
-          <div id="voice-idle-state" class="flex flex-col items-center">
-            <button aria-label="Tap and speak to add transaction" class="w-[72px] h-[72px] rounded-full bg-primary text-on-primary flex items-center justify-center active:bg-secondary-fixed transition-colors select-none focus:outline-none cursor-pointer" id="voice-record-btn" type="button">
-              <span class="material-symbols-outlined text-[28px] text-on-primary select-none">mic</span>
-            </button>
-            <span class="mt-space-md font-body-sm text-body-sm text-on-surface-variant tracking-normal" id="voice-status-text">
-              Tap and say an entry
-            </span>
+          <div id="voice-idle-state" class="flex flex-col items-center w-full">
+            <div class="relative flex items-center justify-center my-2">
+              <div class="orb-glow absolute -inset-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full blur-lg opacity-40"></div>
+              <button aria-label="Tap and speak to add transaction" class="relative w-[84px] h-[84px] rounded-full bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 text-white flex items-center justify-center hover:scale-105 active:scale-95 shadow-xl shadow-indigo-600/30 transition-all select-none focus:outline-none cursor-pointer" id="voice-record-btn" type="button">
+                <span class="material-symbols-outlined text-[36px] text-white select-none">mic</span>
+              </button>
+            </div>
+            <div class="mt-3 flex flex-col items-center text-center">
+              <span class="font-headline-sm text-headline-sm text-on-surface font-medium" id="voice-status-text">
+                Tap and say an entry
+              </span>
+              <span class="text-[11px] text-on-surface-variant/70 mt-0.5 font-normal">
+                "बोलो और बिल बन जाए" • Hindi / English / Hinglish
+              </span>
+            </div>
+
+            <!-- Quick Voice Helper Chips -->
+            <div class="mt-4 flex flex-col items-center w-full">
+              <span class="text-[10px] font-label-sm uppercase tracking-wider text-on-surface-variant/60 mb-2">बोलकर देखें या टैप करें (Try saying)</span>
+              <div class="flex flex-wrap gap-1.5 justify-center max-w-[360px]" id="voice-chips-container">
+                <button type="button" class="voice-prompt-chip px-2.5 py-1 rounded-full bg-surface-container-low hover:bg-surface-container border border-surface-container-high text-[11px] text-on-surface-variant hover:text-on-surface transition-all active:scale-95 cursor-pointer select-none flex items-center gap-1" data-prompt="Sharma ji ko 5 kilo chawal, 600 rupaye, udhaar">
+                  <span>🌾</span><span>Sharma ji 600 udhaar</span>
+                </button>
+                <button type="button" class="voice-prompt-chip px-2.5 py-1 rounded-full bg-surface-container-low hover:bg-surface-container border border-surface-container-high text-[11px] text-on-surface-variant hover:text-on-surface transition-all active:scale-95 cursor-pointer select-none flex items-center gap-1" data-prompt="Ramesh ne 300 diye">
+                  <span>💵</span><span>Ramesh ne 300 diye</span>
+                </button>
+                <button type="button" class="voice-prompt-chip px-2.5 py-1 rounded-full bg-surface-container-low hover:bg-surface-container border border-surface-container-high text-[11px] text-on-surface-variant hover:text-on-surface transition-all active:scale-95 cursor-pointer select-none flex items-center gap-1" data-prompt="Gupta ji ko 2 litre tel 280 cash">
+                  <span>🛢️</span><span>Gupta ji 2L tel cash</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- State B: Recording State -->
-          <div id="voice-recording-state" class="hidden w-full bg-surface-container-low rounded-lg p-space-lg flex flex-col items-center justify-center relative overflow-hidden">
-            <div class="w-full flex items-center justify-between mb-space-md">
+          <div id="voice-recording-state" class="hidden w-full bg-gradient-to-b from-surface-container to-surface-container-low rounded-xl p-space-lg flex flex-col items-center justify-center relative overflow-hidden border border-red-500/30 shadow-lg shadow-red-900/10">
+            <div class="w-full flex items-center justify-between mb-2">
               <div class="flex items-center gap-space-xs">
-                <span class="relative flex h-2 w-2">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
                 </span>
-                <span class="font-label-md text-label-md text-on-surface uppercase tracking-wider font-semibold">Live Intake</span>
+                <span class="font-label-md text-label-md text-red-400 uppercase tracking-wider font-semibold">Listening Now...</span>
               </div>
-              <div class="bg-surface-container px-space-sm py-0.5 rounded text-on-surface-variant font-label-sm text-label-sm">
-                Hindi / Hinglish Auto
+              <div class="bg-surface-container-highest px-2 py-0.5 rounded-full text-indigo-300 font-label-sm text-label-sm border border-indigo-500/20">
+                Gnani Prisma STT
               </div>
             </div>
 
+            <!-- Animated Soundwave Equalizer -->
+            <div class="flex items-center gap-1.5 my-3 h-10">
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+            </div>
+
             <!-- Live Timer -->
-            <div aria-live="polite" class="font-headline-lg text-headline-lg text-on-surface tabular-nums font-medium tracking-tight mb-space-md" id="recording-timer">
+            <div aria-live="polite" class="text-[28px] text-on-surface font-mono font-medium tracking-tight mb-2" id="recording-timer">
               00:00
             </div>
 
             <!-- Stop Button -->
-            <div class="relative flex items-center justify-center mb-space-sm">
-              <button aria-label="Stop Voice Recording" class="w-[72px] h-[72px] rounded-full bg-surface-container-high hover:bg-surface-container-highest active:bg-surface-variant flex items-center justify-center relative transition-colors focus:outline-none cursor-pointer" id="stop-recording-btn" type="button">
-                <span class="w-5 h-5 bg-error rounded-xs"></span>
+            <div class="relative flex items-center justify-center mb-2">
+              <button aria-label="Stop Voice Recording" class="w-[68px] h-[68px] rounded-full bg-red-500/10 border-2 border-red-500/60 hover:bg-red-500/20 active:scale-95 flex items-center justify-center relative transition-all focus:outline-none cursor-pointer" id="stop-recording-btn" type="button">
+                <span class="w-5 h-5 bg-red-500 rounded-sm"></span>
               </button>
             </div>
-            <span class="font-body-sm text-body-sm text-on-surface-variant">Tap to stop & transcribe</span>
+            <span class="text-[12px] text-on-surface-variant font-medium">Tap to stop & create bill</span>
           </div>
 
           <!-- State C: Processing State -->
-          <div id="voice-processing-state" class="hidden w-full h-14 bg-surface-container-low rounded-lg border border-surface-container-high flex items-center justify-center gap-space-sm px-space-md">
-            <div class="w-4 h-4 rounded-full border-[1.5px] border-surface-container-highest border-t-primary animate-spin shrink-0"></div>
-            <span class="font-body-md text-body-md text-on-surface-variant font-normal tracking-tight flex items-center">
-              Transcribing<span class="inline-block animate-pulse">...</span>
-            </span>
-            <div class="ml-auto hidden sm:flex items-center">
-              <span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-space-xs py-0.5 rounded">Hinglish / Hindi</span>
+          <div id="voice-processing-state" class="hidden w-full h-16 bg-surface-container-low rounded-xl border border-indigo-500/30 flex items-center justify-center gap-space-sm px-space-md shadow-sm">
+            <div class="w-5 h-5 rounded-full border-2 border-indigo-500/30 border-t-indigo-400 animate-spin shrink-0"></div>
+            <div class="flex flex-col">
+              <span class="font-body-md text-body-md text-on-surface font-medium flex items-center gap-1">
+                Transcribing & Parsing<span class="inline-block animate-pulse">...</span>
+              </span>
+              <span class="text-[10px] text-on-surface-variant">Extracting customer, items & amount</span>
+            </div>
+            <div class="ml-auto flex items-center">
+              <span class="font-label-sm text-label-sm text-indigo-300 bg-indigo-950/60 border border-indigo-800/50 px-2 py-0.5 rounded-full">AI Parser</span>
             </div>
           </div>
 
@@ -262,6 +356,23 @@
           <div class="w-full bg-surface-container-low rounded-lg overflow-hidden flex flex-col" id="customer-list">
             <div class="p-6 text-center text-on-surface-variant text-body-sm">
               Loading customers...
+            </div>
+          </div>
+        </section>
+
+        <!-- Recent Transactions Timeline Feed -->
+        <section class="w-full flex flex-col mt-8">
+          <div class="flex items-center justify-between gap-space-sm mb-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-indigo-400 text-[20px]">receipt_long</span>
+              <h2 class="font-headline-md text-headline-md text-on-surface font-medium shrink-0">Recent Transactions</h2>
+            </div>
+            <span class="text-[11px] text-on-surface-variant font-mono" id="recent-transactions-count">All activity</span>
+          </div>
+
+          <div class="w-full bg-surface-container-low rounded-xl border border-surface-container-high overflow-hidden flex flex-col divide-y divide-surface-container-high/50" id="recent-transactions-list">
+            <div class="p-6 text-center text-on-surface-variant text-body-sm">
+              Loading recent transactions...
             </div>
           </div>
         </section>
@@ -330,6 +441,14 @@
                 <span class="hidden text-[10px] font-label-sm uppercase tracking-wider text-error" id="unit-missing-tag">Required</span>
               </div>
               <input class="w-full h-11 px-3 bg-surface-container-low border border-surface-container-high rounded-lg font-body-lg text-body-lg text-on-surface focus:border-outline focus:outline-none transition-colors" id="field-unit" placeholder="e.g. kg" type="text" />
+              <!-- Quick Unit Chips -->
+              <div class="flex items-center gap-1.5 flex-wrap pt-0.5" id="unit-chips-container">
+                <button type="button" class="unit-chip px-2 py-0.5 rounded bg-surface-container border border-surface-container-high text-[11px] text-on-surface-variant hover:text-on-surface transition-colors select-none cursor-pointer" data-unit="kg">kg</button>
+                <button type="button" class="unit-chip px-2 py-0.5 rounded bg-surface-container border border-surface-container-high text-[11px] text-on-surface-variant hover:text-on-surface transition-colors select-none cursor-pointer" data-unit="litre">litre</button>
+                <button type="button" class="unit-chip px-2 py-0.5 rounded bg-surface-container border border-surface-container-high text-[11px] text-on-surface-variant hover:text-on-surface transition-colors select-none cursor-pointer" data-unit="packet">packet</button>
+                <button type="button" class="unit-chip px-2 py-0.5 rounded bg-surface-container border border-surface-container-high text-[11px] text-on-surface-variant hover:text-on-surface transition-colors select-none cursor-pointer" data-unit="gm">gm</button>
+                <button type="button" class="unit-chip px-2 py-0.5 rounded bg-surface-container border border-surface-container-high text-[11px] text-on-surface-variant hover:text-on-surface transition-colors select-none cursor-pointer" data-unit="piece">piece</button>
+              </div>
             </div>
           </div>
 
@@ -368,8 +487,8 @@
         </form>
 
         <!-- Sticky Bottom Action Deck -->
-        <div class="fixed bottom-0 inset-x-0 max-w-[480px] mx-auto bg-surface border-t border-surface-container-high p-4 z-40 pb-safe">
-          <div class="grid grid-cols-2 gap-space-md">
+        <div class="fixed bottom-0 inset-x-0 bg-surface/95 backdrop-blur-md border-t border-surface-container-high p-4 z-40 pb-safe">
+          <div class="max-w-4xl mx-auto grid grid-cols-2 gap-space-md">
             <button class="h-11 rounded-lg bg-surface-container-low border border-surface-container-high text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-1.5 active:bg-surface-container-high transition-colors cursor-pointer" id="btn-re-record" type="button">
               <span class="material-symbols-outlined text-[18px]">mic</span>
               Re-record
@@ -392,7 +511,12 @@
         <div class="mt-space-md mb-space-md bg-surface-container-low border border-surface-container-high rounded-lg p-space-md">
           <div class="flex items-center justify-between mb-1">
             <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Balance Due (Udhaar)</span>
-            <span class="text-[11px] text-on-surface-variant font-mono tracking-tight" id="ledger-sync-time">Running Balance</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] text-on-surface-variant font-mono tracking-tight" id="ledger-sync-time">Running Balance</span>
+              <button id="btn-delete-customer" type="button" title="Delete customer" class="w-6 h-6 rounded flex items-center justify-center text-on-surface-variant/50 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-[15px]">delete</span>
+              </button>
+            </div>
           </div>
           <div class="flex items-baseline justify-between mt-1">
             <div class="flex items-baseline gap-1.5">
@@ -410,7 +534,13 @@
         <div class="flex flex-col gap-space-xs">
           <div class="flex items-center justify-between px-0.5 mb-space-xs">
             <h3 class="font-headline-sm text-headline-sm text-on-surface font-medium">Entries</h3>
-            <span class="text-[11px] text-on-surface-variant font-mono" id="ledger-entries-count">0 entries</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] text-on-surface-variant font-mono" id="ledger-entries-count">0 entries</span>
+              <button id="btn-ledger-add-entry" onclick="window.openManualEntry && window.openManualEntry(window.state?.currentCustomerName || '')" type="button" class="h-7 px-2.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 font-label-sm text-label-sm flex items-center gap-1 transition-colors cursor-pointer select-none">
+                <span class="material-symbols-outlined text-[15px]">add</span>
+                <span>Add Entry</span>
+              </button>
+            </div>
           </div>
           <div class="w-full bg-surface-container-low border border-surface-container-high rounded-lg overflow-hidden flex flex-col divide-y divide-surface-container-high" id="ledger-entries-list">
             <div class="p-6 text-center text-on-surface-variant text-body-sm">
@@ -425,6 +555,6 @@
 
   </div>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=2.2"></script>
 </body>
 </html>

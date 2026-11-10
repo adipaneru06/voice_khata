@@ -18,6 +18,8 @@ from app.db import (
     add_entry,
     compute_balance,
     create_db_and_tables,
+    delete_customer,
+    delete_entry,
     find_customer,
     find_or_create_customer,
     get_customers_with_balance,
@@ -63,6 +65,10 @@ class EntryCreate(BaseModel):
 
 
 class SpeakRequest(BaseModel):
+    text: str
+
+
+class ParseRequest(BaseModel):
     text: str
 
 
@@ -142,6 +148,35 @@ async def transcribe(
     }
 
 
+@app.post("/api/parse")
+def parse_transcript_text(
+    payload: ParseRequest,
+    session: Session = Depends(get_session),
+):
+    """Directly parse a text transcript (e.g. for quick chips or manual entry) without audio."""
+    text = payload.text.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Text cannot be empty.")
+
+    parsed = parse(text)
+    matched_customer = None
+    if parsed.get("customer"):
+        existing = find_customer(session, parsed["customer"])
+        if existing:
+            bal = compute_balance(session, existing.id)  # type: ignore[arg-type]
+            matched_customer = {
+                "id": existing.id,
+                "name": existing.name,
+                "balance": int(bal) if bal.is_integer() else bal,
+            }
+
+    return {
+        "transcript": text,
+        "parsed": parsed,
+        "matched_customer": matched_customer,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Entries & Customers Endpoints
 # ---------------------------------------------------------------------------
@@ -208,6 +243,58 @@ def customer_ledger(id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Customer not found.")
 
     return get_entries(session, id)
+
+
+@app.get("/api/entries/recent")
+def list_recent_entries(session: Session = Depends(get_session), limit: int = 20):
+    """Get recent entries across all customers for dashboard scrolling feed."""
+    from sqlmodel import select
+    entries = session.exec(
+        select(Entry).order_by(Entry.created_at.desc()).limit(limit)  # type: ignore[union-attr]
+    ).all()
+    result = []
+    for e in entries:
+        cust = session.get(Customer, e.customer_id)
+        result.append({
+            "id": e.id,
+            "customer_id": e.customer_id,
+            "customer_name": cust.name if cust else "Unknown",
+            "item": e.item,
+            "quantity": e.quantity,
+            "unit": e.unit,
+            "amount": e.amount,
+            "kind": e.kind,
+            "raw_transcript": e.raw_transcript,
+            "created_at": e.created_at.isoformat(),
+        })
+    return result
+
+
+@app.delete("/api/entries/{id}")
+def delete_entry_endpoint(id: int, session: Session = Depends(get_session)):
+    """Delete an entry and return updated customer balance."""
+    entry = session.get(Entry, id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found.")
+
+    cust_id = entry.customer_id
+    delete_entry(session, id)
+    new_balance = compute_balance(session, cust_id)
+    return {
+        "status": "ok",
+        "deleted_id": id,
+        "customer_id": cust_id,
+        "balance": new_balance,
+    }
+
+
+@app.delete("/api/customers/{id}")
+def delete_customer_endpoint(id: int, session: Session = Depends(get_session)):
+    """Delete a customer and all their ledger entries."""
+    success = delete_customer(session, id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Customer not found.")
+    return {"status": "ok", "deleted_customer_id": id}
 
 
 @app.get("/api/entries/{id}/invoice.pdf")

@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 GNANI_API_KEY: str = os.getenv("GNANI_API_KEY", "")
 MOCK_GNANI: bool = os.getenv("MOCK_GNANI", "0") == "1"

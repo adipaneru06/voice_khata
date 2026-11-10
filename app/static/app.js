@@ -14,6 +14,7 @@ let SHOP_NAME = "My Shop";
 const state = {
   customers: [],
   currentView: "home", // "home" | "confirm" | "ledger"
+  previousView: "home",
   currentCustomerId: null,
   currentCustomerName: null,
   currentCustomerBalance: 0,
@@ -35,6 +36,9 @@ const elements = {
   headerTitle: document.getElementById("header-title"),
   shopNameHeader: document.getElementById("shop-name-header"),
   headerBackBtn: document.getElementById("header-back-btn"),
+  btnManualEntry: document.getElementById("btn-manual-entry"),
+  btnLedgerAddEntry: document.getElementById("btn-ledger-add-entry"),
+  btnDeleteCustomer: document.getElementById("btn-delete-customer"),
   errorBanner: document.getElementById("error-banner"),
   errorMessage: document.getElementById("error-message"),
   errorRetryBtn: document.getElementById("error-retry-btn"),
@@ -56,6 +60,8 @@ const elements = {
   recordingTimer: document.getElementById("recording-timer"),
   customerSearchInput: document.getElementById("customer-search-input"),
   customerList: document.getElementById("customer-list"),
+  recentTransactionsList: document.getElementById("recent-transactions-list"),
+  recentTransactionsCount: document.getElementById("recent-transactions-count"),
 
   // Confirm View Elements
   confirmTranscriptText: document.getElementById("confirm-transcript-text"),
@@ -138,8 +144,12 @@ if (elements.errorRetryBtn) {
 // View Switching (Strictly JS-based per Section 13 — No history.back())
 // ---------------------------------------------------------------------------
 function switchView(viewName) {
+  if (state.currentView !== viewName) {
+    state.previousView = state.currentView;
+  }
   state.currentView = viewName;
   clearError();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 
   elements.viewHome.classList.add("hidden");
   elements.viewConfirm.classList.add("hidden");
@@ -167,7 +177,11 @@ function switchView(viewName) {
 }
 
 elements.headerBackBtn.addEventListener("click", () => {
-  switchView("home");
+  if (state.currentView === "confirm" && state.previousView === "ledger" && state.currentCustomerId) {
+    switchView("ledger");
+  } else {
+    switchView("home");
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -370,10 +384,16 @@ function setTransactionType(type) {
   buttons.forEach(({ btn, key }) => {
     if (key === type) {
       btn.setAttribute("aria-checked", "true");
-      btn.className = "h-full rounded flex items-center justify-center font-label-md sm:font-label-lg text-label-md sm:text-label-lg transition-colors bg-primary text-on-primary font-medium truncate px-1";
+      if (key === "credit") {
+        btn.className = "h-full rounded-md flex items-center justify-center font-label-md sm:font-label-lg text-label-md sm:text-label-lg transition-all bg-red-600/30 text-red-300 border border-red-500/60 font-semibold shadow-sm truncate px-1";
+      } else if (key === "cash") {
+        btn.className = "h-full rounded-md flex items-center justify-center font-label-md sm:font-label-lg text-label-md sm:text-label-lg transition-all bg-amber-600/30 text-amber-300 border border-amber-500/60 font-semibold shadow-sm truncate px-1";
+      } else if (key === "payment") {
+        btn.className = "h-full rounded-md flex items-center justify-center font-label-md sm:font-label-lg text-label-md sm:text-label-lg transition-all bg-emerald-600/30 text-emerald-300 border border-emerald-500/60 font-semibold shadow-sm truncate px-1";
+      }
     } else {
       btn.setAttribute("aria-checked", "false");
-      btn.className = "h-full rounded flex items-center justify-center font-label-md sm:font-label-lg text-label-md sm:text-label-lg transition-colors bg-transparent text-on-surface-variant hover:text-on-surface truncate px-1";
+      btn.className = "h-full rounded-md flex items-center justify-center font-label-md sm:font-label-lg text-label-md sm:text-label-lg transition-all bg-transparent text-on-surface-variant hover:text-on-surface truncate px-1";
     }
   });
 
@@ -620,8 +640,12 @@ elements.saveEntryBtn.addEventListener("click", async () => {
     const spokenText = buildConfirmationSentence(kind, customer, amount);
     playTtsAudio(spokenText).catch(() => {});
 
-    // Return to home dashboard and refresh data
-    switchView("home");
+    // Return to customer ledger if opened from ledger view and for that customer, else home
+    if (state.previousView === "ledger" && state.currentCustomerId && state.currentCustomerName && state.currentCustomerName.toLowerCase().trim() === customer.toLowerCase().trim()) {
+      openCustomerLedger(state.currentCustomerId, state.currentCustomerName, balance);
+    } else {
+      switchView("home");
+    }
 
   } catch (err) {
     console.error("Save entry error:", err);
@@ -698,6 +722,7 @@ async function loadCustomers(isRetry = false) {
     state.customers = await res.json();
     renderSummaryCard();
     renderCustomerList(state.customers);
+    loadRecentTransactions();
   } catch (err) {
     console.error("Load customers error:", err);
     if (!isRetry) {
@@ -725,6 +750,32 @@ function renderSummaryCard() {
   elements.metricCustomerCount.textContent = `${state.customers.length} active`;
 }
 
+function getInitials(name) {
+  if (!name) return "??";
+  const trimmed = name.trim();
+  const parts = trimmed.split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return trimmed.slice(0, Math.min(2, trimmed.length)).toUpperCase();
+}
+
+function getAvatarColor(name) {
+  const colors = [
+    "bg-indigo-950/80 text-indigo-300 border-indigo-700/50",
+    "bg-purple-950/80 text-purple-300 border-purple-700/50",
+    "bg-emerald-950/80 text-emerald-300 border-emerald-700/50",
+    "bg-amber-950/80 text-amber-300 border-amber-700/50",
+    "bg-cyan-950/80 text-cyan-300 border-cyan-700/50",
+    "bg-rose-950/80 text-rose-300 border-rose-700/50",
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash << 5) - hash + name.charCodeAt(i);
+  }
+  return colors[Math.abs(hash) % colors.length];
+}
+
 function renderCustomerList(list) {
   // Empty state: no customers yet
   if (!list || list.length === 0) {
@@ -740,29 +791,48 @@ function renderCustomerList(list) {
 
   elements.customerList.innerHTML = list
     .map((c) => {
-      let balanceColorClass = "text-outline";
-      let balanceFormatted = `₹${formatNumber(c.balance)}`;
+      let balanceBadge = `
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 tabular-nums">
+          Settled
+        </span>
+      `;
 
       if (c.balance > 0) {
-        balanceColorClass = "text-error";
+        balanceBadge = `
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[12px] font-mono font-medium bg-red-500/10 text-red-400 border border-red-500/20 tabular-nums">
+            ₹${formatNumber(c.balance)}
+          </span>
+        `;
       } else if (c.balance < 0) {
-        balanceColorClass = "text-[#7BA68A]";
-        balanceFormatted = `₹${formatNumber(Math.abs(c.balance))} adv`;
+        balanceBadge = `
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[12px] font-mono font-medium bg-teal-500/10 text-teal-400 border border-teal-500/20 tabular-nums">
+            ₹${formatNumber(Math.abs(c.balance))} adv
+          </span>
+        `;
       }
 
       const activityStr = formatRelativeDate(c.last_activity);
+      const initials = getInitials(c.name);
+      const avatarClass = getAvatarColor(c.name);
 
       return `
-        <div class="customer-row px-space-md py-space-sm flex items-center justify-between hover:bg-surface-container active:bg-surface-container transition-colors cursor-pointer select-none"
+        <div class="customer-row px-space-md py-3 flex items-center justify-between hover:bg-surface-container active:bg-surface-container-high transition-colors cursor-pointer select-none border-b border-surface-container-high/40 last:border-b-0"
              onclick="openCustomerLedger(${c.id}, '${escapeHtml(c.name)}', ${c.balance})">
-          <div class="flex flex-col min-w-0 pr-space-sm">
-            <span class="customer-name font-headline-sm text-headline-sm text-on-surface font-medium truncate">${escapeHtml(c.name)}</span>
-            <span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">${activityStr}</span>
+          <div class="flex items-center gap-3 min-w-0 pr-space-sm">
+            <div class="w-10 h-10 rounded-full border flex items-center justify-center font-medium text-[13px] shrink-0 ${avatarClass}">
+              ${escapeHtml(initials)}
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="customer-name font-headline-sm text-headline-sm text-on-surface font-medium truncate">${escapeHtml(c.name)}</span>
+              <span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1 mt-0.5">
+                <span class="material-symbols-outlined text-[13px] text-outline">schedule</span>
+                ${activityStr}
+              </span>
+            </div>
           </div>
-          <div class="flex items-baseline text-right shrink-0">
-            <span class="font-currency-md text-currency-md ${balanceColorClass} font-medium [font-variant-numeric:tabular-nums]">
-              ${balanceFormatted}
-            </span>
+          <div class="flex items-center gap-2 shrink-0">
+            ${balanceBadge}
+            <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
           </div>
         </div>
       `;
@@ -782,6 +852,101 @@ elements.customerSearchInput.addEventListener("input", (event) => {
   );
   renderCustomerList(filtered);
 });
+
+async function loadRecentTransactions() {
+  if (!elements.recentTransactionsList) return;
+
+  try {
+    const res = await fetch("/api/entries/recent?limit=20");
+    if (!res.ok) return;
+
+    const entries = await res.json();
+    if (elements.recentTransactionsCount) {
+      elements.recentTransactionsCount.textContent = `${entries.length} ${entries.length === 1 ? "entry" : "entries"}`;
+    }
+
+    if (entries.length === 0) {
+      elements.recentTransactionsList.innerHTML = `
+        <div class="py-8 px-4 text-center flex flex-col items-center justify-center">
+          <span class="material-symbols-outlined text-[32px] text-outline mb-1 select-none">receipt_long</span>
+          <span class="font-headline-sm text-headline-sm text-on-surface font-medium">No transactions yet</span>
+          <span class="font-body-sm text-body-sm text-on-surface-variant">Tap the mic or "+ New Entry" to record your first transaction.</span>
+        </div>
+      `;
+      return;
+    }
+
+    elements.recentTransactionsList.innerHTML = entries
+      .map((entry) => {
+        let tagText = "Udhaar";
+        let amountPrefix = "";
+        let amountColor = "text-red-400";
+        let tagBg = "bg-red-500/10 text-red-300 border-red-500/20";
+
+        if (entry.kind === "payment") {
+          tagText = "Received";
+          amountPrefix = "-";
+          amountColor = "text-emerald-400";
+          tagBg = "bg-emerald-500/10 text-emerald-300 border-emerald-500/20";
+        } else if (entry.kind === "cash") {
+          tagText = "Cash";
+          amountPrefix = "";
+          amountColor = "text-amber-400";
+          tagBg = "bg-amber-500/10 text-amber-300 border-amber-500/20";
+        }
+
+        const dateStr = formatDateTime(entry.created_at);
+        const itemLine = entry.kind === "payment"
+          ? "Payment received"
+          : `${escapeHtml(entry.item || "General item")}${entry.quantity ? `, ${entry.quantity} ${escapeHtml(entry.unit || "")}` : ""}`;
+
+        const invoiceUrl = `/api/entries/${entry.id}/invoice.pdf`;
+        const customerName = escapeHtml(entry.customer_name || "Customer");
+        const initials = getInitials(customerName);
+        const avatarClass = getAvatarColor(customerName);
+
+        return `
+          <div class="p-space-md flex items-center justify-between hover:bg-surface-container active:bg-surface-container-high transition-colors select-none">
+            <div class="flex items-center gap-3 min-w-0 pr-space-sm">
+              <div class="w-9 h-9 rounded-full border flex items-center justify-center font-medium text-[12px] shrink-0 ${avatarClass}">
+                ${escapeHtml(initials)}
+              </div>
+              <div class="flex flex-col gap-0.5 min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-body-md text-body-md text-on-surface font-medium truncate">${customerName}</span>
+                  <span class="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${tagBg}">${tagText}</span>
+                </div>
+                <span class="text-[12px] text-on-surface-variant truncate">${itemLine}</span>
+                <span class="text-[11px] text-on-surface-variant/70 font-mono">${dateStr}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-[15px] font-semibold font-mono ${amountColor} tabular-nums">
+                ${amountPrefix}₹${formatNumber(entry.amount)}
+              </span>
+              <a href="${invoiceUrl}" target="_blank" rel="noopener noreferrer"
+                 aria-label="View Invoice PDF"
+                 title="Download PDF Bill"
+                 class="w-8 h-8 rounded-lg bg-surface-container border border-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface active:bg-surface-container-highest transition-colors">
+                <span class="material-symbols-outlined text-[17px]">description</span>
+              </a>
+              <button onclick="handleDeleteEntry(${entry.id}, event)"
+                      type="button"
+                      aria-label="Delete Entry"
+                      title="Delete Entry"
+                      class="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 active:scale-95 border border-red-500/20 flex items-center justify-center text-red-400 hover:text-red-300 transition-all cursor-pointer">
+                <span class="material-symbols-outlined text-[17px]">delete</span>
+              </button>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  } catch (err) {
+    console.warn("Could not load recent entries:", err);
+  }
+}
+
 
 // ---------------------------------------------------------------------------
 // Ledger View: GET /api/customers/{id}/entries & Invoice PDF
@@ -873,15 +1038,23 @@ async function openCustomerLedger(customerId, customerName, customerBalance) {
                 <span class="text-[11px] text-on-surface-variant/60 font-mono">INV-${entry.id}</span>
               </div>
             </div>
-            <div class="flex items-center gap-space-sm sm:gap-space-md shrink-0">
+            <div class="flex items-center gap-2 shrink-0">
               <span class="text-[14px] font-medium font-mono ${amountColor} tabular-nums">
                 ${amountPrefix}₹${formatNumber(entry.amount)}
               </span>
               <a href="${invoiceUrl}" target="_blank" rel="noopener noreferrer"
                  aria-label="View Invoice PDF"
+                 title="Download PDF Bill"
                  class="w-8 h-8 rounded-lg bg-surface-container border border-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface active:bg-surface-container-highest transition-colors">
                 <span class="material-symbols-outlined text-[17px]">description</span>
               </a>
+              <button onclick="handleDeleteEntry(${entry.id}, event)"
+                      type="button"
+                      aria-label="Delete Entry"
+                      title="Delete Entry"
+                      class="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 active:scale-95 border border-red-500/20 flex items-center justify-center text-red-400 hover:text-red-300 transition-all cursor-pointer">
+                <span class="material-symbols-outlined text-[17px]">delete</span>
+              </button>
             </div>
           </div>
         `;
@@ -946,6 +1119,129 @@ function escapeHtml(str) {
 }
 
 // ---------------------------------------------------------------------------
+// Manual Entry & Prompt Chips Helpers
+// ---------------------------------------------------------------------------
+function openManualEntry(customerName = "") {
+  clearError();
+  state.rawTranscript = "";
+  elements.confirmTranscriptText.textContent = "Manual entry (no voice recording)";
+  elements.fieldCustomer.value = customerName || "";
+  elements.fieldItem.value = "";
+  elements.fieldQty.value = "";
+  elements.fieldUnit.value = "";
+  elements.fieldAmount.value = "";
+
+  // Reset missing tags and error highlights
+  elements.customerMissingTag.classList.add("hidden");
+  elements.customerValidationMsg.classList.add("hidden");
+  elements.fieldCustomer.classList.remove("border-error");
+
+  elements.itemMissingTag.classList.add("hidden");
+  elements.itemValidationMsg.classList.add("hidden");
+  elements.fieldItem.classList.remove("border-error");
+
+  elements.qtyMissingTag.classList.add("hidden");
+  elements.fieldQty.classList.remove("border-error");
+
+  elements.unitMissingTag.classList.add("hidden");
+  elements.fieldUnit.classList.remove("border-error");
+
+  elements.amountMissingTag.classList.add("hidden");
+  elements.amountValidationMsg.classList.add("hidden");
+  elements.fieldAmount.classList.remove("border-error");
+
+  setTransactionType("credit");
+  switchView("confirm");
+  validateConfirmForm();
+
+  setTimeout(() => {
+    if (!customerName) {
+      elements.fieldCustomer.focus();
+    } else {
+      elements.fieldItem.focus();
+    }
+  }, 100);
+}
+
+async function handlePromptChip(promptText) {
+  clearError();
+  setVoiceSubState("processing");
+
+  try {
+    const res = await fetch("/api/parse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: promptText }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to parse prompt chip text");
+    }
+
+    const data = await res.json();
+    handleTranscriptionResult(data);
+  } catch (err) {
+    console.error("Chip parse error:", err);
+    showError("Could not process prompt. Please try again.");
+    setVoiceSubState("idle");
+  }
+}
+
+async function handleDeleteEntry(entryId, event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+  const ok = confirm("Are you sure you want to delete this entry? This will update the customer balance.");
+  if (!ok) return;
+
+  try {
+    const res = await fetch(`/api/entries/${entryId}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Failed to delete entry");
+    }
+
+    const data = await res.json();
+
+    // If currently in ledger view, reload current customer ledger
+    if (state.currentView === "ledger" && state.currentCustomerId) {
+      state.currentCustomerBalance = data.balance;
+      openCustomerLedger(state.currentCustomerId, state.currentCustomerName, data.balance);
+    }
+
+    loadCustomers();
+  } catch (err) {
+    console.error("Delete entry error:", err);
+    showError(err.message || "Could not delete entry.");
+  }
+}
+
+async function handleDeleteCustomer(customerId, customerName) {
+  const ok = confirm(`Delete customer "${customerName}" and all their records?`);
+  if (!ok) return;
+
+  try {
+    const res = await fetch(`/api/customers/${customerId}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to delete customer");
+    }
+
+    switchView("home");
+  } catch (err) {
+    console.error("Delete customer error:", err);
+    showError(err.message || "Could not delete customer.");
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Initialization: Config & Initial Load
 // ---------------------------------------------------------------------------
 async function initApp() {
@@ -962,7 +1258,69 @@ async function initApp() {
     console.warn("Could not load /api/config:", err);
   }
 
+  // Global helpers exposed on window for inline handlers & debugging
+  window.state = state;
+  window.elements = elements;
+  window.openManualEntry = openManualEntry;
+  window.openCustomerLedger = openCustomerLedger;
+  window.handleDeleteEntry = handleDeleteEntry;
+  window.handleDeleteCustomer = handleDeleteCustomer;
+  window.handlePromptChip = handlePromptChip;
+  window.switchView = switchView;
+
+  if (elements.btnManualEntry) {
+    elements.btnManualEntry.addEventListener("click", (e) => {
+      e.preventDefault();
+      const cust = (state.currentView === "ledger" && state.currentCustomerName)
+        ? state.currentCustomerName
+        : "";
+      openManualEntry(cust);
+    });
+  }
+
+  if (elements.btnLedgerAddEntry) {
+    elements.btnLedgerAddEntry.addEventListener("click", (e) => {
+      e.preventDefault();
+      openManualEntry(state.currentCustomerName || "");
+    });
+  }
+
+  if (elements.btnDeleteCustomer) {
+    elements.btnDeleteCustomer.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (state.currentCustomerId && state.currentCustomerName) {
+        handleDeleteCustomer(state.currentCustomerId, state.currentCustomerName);
+      }
+    });
+  }
+
+  // Voice Prompt Chips
+  document.querySelectorAll(".voice-prompt-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const prompt = chip.getAttribute("data-prompt");
+      if (prompt) {
+        handlePromptChip(prompt);
+      }
+    });
+  });
+
+  // Unit Chips
+  document.querySelectorAll(".unit-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const unit = chip.getAttribute("data-unit");
+      if (unit && elements.fieldUnit) {
+        elements.fieldUnit.value = unit;
+        validateConfirmForm();
+      }
+    });
+  });
+
   switchView("home");
 }
 
-window.addEventListener("DOMContentLoaded", initApp);
+// Robust execution: handles cases where DOMContentLoaded already fired
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}

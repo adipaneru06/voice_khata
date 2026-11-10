@@ -143,6 +143,29 @@ def get_entries(session: Session, customer_id: int) -> list[Entry]:
     )
 
 
+def delete_entry(session: Session, entry_id: int) -> Optional[Entry]:
+    """Delete an entry by ID and return the deleted entry (or None if not found)."""
+    entry = session.get(Entry, entry_id)
+    if not entry:
+        return None
+    session.delete(entry)
+    session.commit()
+    return entry
+
+
+def delete_customer(session: Session, customer_id: int) -> bool:
+    """Delete a customer and all their associated entries."""
+    customer = session.get(Customer, customer_id)
+    if not customer:
+        return False
+    entries = session.exec(select(Entry).where(Entry.customer_id == customer_id)).all()
+    for e in entries:
+        session.delete(e)
+    session.delete(customer)
+    session.commit()
+    return True
+
+
 # ---------------------------------------------------------------------------
 # Balance & customer list
 # ---------------------------------------------------------------------------

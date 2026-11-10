@@ -6,4 +6,5 @@ reportlab
 httpx
 python-dotenv
 pytest
+imageio-ffmpeg
 
