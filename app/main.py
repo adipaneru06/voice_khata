@@ -101,11 +101,11 @@ async def transcribe(
         raise HTTPException(status_code=400, detail="Audio file is empty.")
 
     try:
-        wav_bytes = convert_to_wav(audio_bytes)
+        wav_bytes = convert_to_wav(audio_bytes, filename=file.filename or "recording.webm")
     except Exception as exc:
         raise HTTPException(
             status_code=400,
-            detail=f"Audio conversion failed: {str(exc)}",
+            detail=f"{str(exc)}",
         )
 
     try:

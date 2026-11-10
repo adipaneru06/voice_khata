@@ -219,12 +219,33 @@ async function startRecording() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     state.audioChunks = [];
 
-    let mimeType = "audio/webm";
-    if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
-      mimeType = "audio/webm;codecs=opus";
+    // Select the best supported audio format across Chrome, Safari/iOS, Edge, Firefox
+    let selectedMimeType = "";
+    let fileExtension = "webm";
+
+    const candidates = [
+      { mime: "audio/webm;codecs=opus", ext: "webm" },
+      { mime: "audio/webm", ext: "webm" },
+      { mime: "audio/mp4", ext: "mp4" },
+      { mime: "audio/aac", ext: "aac" },
+      { mime: "audio/ogg;codecs=opus", ext: "ogg" },
+      { mime: "audio/ogg", ext: "ogg" },
+      { mime: "audio/wav", ext: "wav" },
+    ];
+
+    for (const c of candidates) {
+      if (typeof window.MediaRecorder.isTypeSupported === "function" && window.MediaRecorder.isTypeSupported(c.mime)) {
+        selectedMimeType = c.mime;
+        fileExtension = c.ext;
+        break;
+      }
     }
 
-    state.mediaRecorder = new MediaRecorder(stream, { mimeType });
+    state.recordingMimeType = selectedMimeType;
+    state.recordingExt = fileExtension;
+
+    const options = selectedMimeType ? { mimeType: selectedMimeType } : undefined;
+    state.mediaRecorder = new MediaRecorder(stream, options);
 
     state.mediaRecorder.ondataavailable = (event) => {
       if (event.data && event.data.size > 0) {
@@ -236,9 +257,12 @@ async function startRecording() {
       stream.getTracks().forEach((track) => track.stop());
       clearInterval(state.recordingInterval);
 
-      const audioBlob = new Blob(state.audioChunks, { type: mimeType });
-      if (audioBlob.size === 0) {
-        showError("No speech detected. Please speak clearly and try again.", () => startRecording());
+      const actualMime = state.mediaRecorder.mimeType || state.recordingMimeType || "audio/webm";
+      const audioBlob = new Blob(state.audioChunks, { type: actualMime });
+
+      // Minimum size check to avoid sending empty or truncated recordings
+      if (audioBlob.size < 500) {
+        showError("Recording was too short. Please speak clearly and try again.", () => startRecording());
         setVoiceSubState("idle");
         return;
       }
@@ -246,7 +270,8 @@ async function startRecording() {
       await sendAudioForTranscription(audioBlob);
     };
 
-    state.mediaRecorder.start(250);
+    // Continuous recording into memory buffer: avoids corrupt/split WebM cluster issues
+    state.mediaRecorder.start();
 
     // Live Timer
     state.recordingSeconds = 0;
@@ -274,7 +299,11 @@ async function startRecording() {
 function stopRecording() {
   if (state.mediaRecorder && state.mediaRecorder.state === "recording") {
     setVoiceSubState("processing");
-    state.mediaRecorder.stop();
+    try {
+      state.mediaRecorder.stop();
+    } catch (err) {
+      console.warn("stopRecording error:", err);
+    }
   }
 }
 
@@ -288,8 +317,9 @@ async function sendAudioForTranscription(audioBlob, isRetry = false) {
   state.lastAudioBlob = audioBlob;
   setVoiceSubState("processing");
 
+  const ext = state.recordingExt || "webm";
   const formData = new FormData();
-  formData.append("file", audioBlob, "recording.webm");
+  formData.append("file", audioBlob, `recording.${ext}`);
 
   try {
     const res = await fetch("/api/transcribe", {

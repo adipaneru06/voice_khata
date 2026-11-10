@@ -40,12 +40,15 @@ def get_ffmpeg_binary() -> str | None:
     return None
 
 
-def convert_to_wav(input_bytes: bytes) -> bytes:
-    """Convert input audio bytes (e.g. webm, ogg, wav) to 16 kHz mono WAV using ffmpeg.
+def convert_to_wav(input_bytes: bytes, filename: str = "recording.webm") -> bytes:
+    """Convert input audio bytes (e.g. webm, ogg, mp4, wav) to 16 kHz mono WAV using ffmpeg.
 
     Raises:
         RuntimeError: If ffmpeg is not installed or conversion fails.
     """
+    if not input_bytes:
+        raise RuntimeError("Audio file is empty.")
+
     ffmpeg_bin = get_ffmpeg_binary()
     if not ffmpeg_bin:
         raise RuntimeError(
@@ -53,8 +56,13 @@ def convert_to_wav(input_bytes: bytes) -> bytes:
             "Please install ffmpeg to enable audio conversion."
         )
 
+    # Preserve file extension so ffmpeg selects the correct demuxer
+    ext = os.path.splitext(filename)[1].lower() if filename else ""
+    if not ext or ext not in [".webm", ".mp4", ".ogg", ".wav", ".m4a", ".aac"]:
+        ext = ".webm"
+
     with tempfile.TemporaryDirectory() as tmpdir:
-        input_file = os.path.join(tmpdir, "input_audio")
+        input_file = os.path.join(tmpdir, f"input_audio{ext}")
         output_file = os.path.join(tmpdir, "output.wav")
 
         with open(input_file, "wb") as f:
@@ -85,7 +93,11 @@ def convert_to_wav(input_bytes: bytes) -> bytes:
 
         if proc.returncode != 0:
             error_msg = proc.stderr.decode(errors="replace")
-            raise RuntimeError(f"ffmpeg conversion failed: {error_msg}")
+            # Return a clean, user-friendly error instead of dumping the compiler/library headers
+            if "invalid data found" in error_msg.lower() or "end of file" in error_msg.lower():
+                raise RuntimeError("Audio recording was too short or incomplete. Please hold the mic, speak clearly, and try again.")
+            last_line = error_msg.strip().splitlines()[-1] if error_msg.strip() else "Unknown conversion error"
+            raise RuntimeError(f"Audio conversion failed: {last_line}")
 
         with open(output_file, "rb") as f:
             return f.read()
