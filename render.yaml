@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: voice-khata
+    runtime: docker
+    plan: free
+    region: oregon
+    envVars:
+      - key: GNANI_API_KEY
+        sync: false
+      - key: MOCK_GNANI
+        value: "0"
+      - key: SHOP_NAME
+        value: "Khata Voice"
