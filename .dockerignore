@@ -1,0 +1,16 @@
+.env
+*.db
+*.sqlite
+voice_khata.db
+__pycache__/
+*.pyc
+design/
+Design/
+ffmpeg.exe
+.git
+.gitignore
+.dockerignore
+.pytest_cache/
+.venv/
+venv/
+invoices/*.pdf

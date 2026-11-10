@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport" />
+  <title>Voice Khata</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-surface-variant": "#c4c7c8",
+            "inverse-on-surface": "#313030",
+            "on-secondary": "#303031",
+            "on-primary": "#2f3131",
+            "primary-fixed-dim": "#c6c6c7",
+            "error": "#ffb4ab",
+            "error-container": "#93000a",
+            "on-tertiary": "#303030",
+            "tertiary-fixed": "#e4e2e1",
+            "on-primary-fixed-variant": "#454747",
+            "on-background": "#e5e2e1",
+            "on-secondary-fixed-variant": "#464747",
+            "on-surface": "#e5e2e1",
+            "secondary-container": "#464747",
+            "surface-container-high": "#2a2a2a",
+            "surface-container": "#201f1f",
+            "surface-variant": "#353534",
+            "secondary": "#c7c6c6",
+            "on-error": "#690005",
+            "outline-variant": "#444748",
+            "tertiary-fixed-dim": "#c8c6c5",
+            "secondary-fixed-dim": "#c7c6c6",
+            "background": "#131313",
+            "inverse-surface": "#e5e2e1",
+            "on-primary-fixed": "#1a1c1c",
+            "tertiary": "#ffffff",
+            "surface-container-highest": "#353534",
+            "on-error-container": "#ffdad6",
+            "outline": "#8e9192",
+            "surface-tint": "#c6c6c7",
+            "primary-fixed": "#e2e2e2",
+            "on-tertiary-container": "#656464",
+            "surface-container-lowest": "#0e0e0e",
+            "primary-container": "#e2e2e2",
+            "on-secondary-container": "#b5b5b5",
+            "inverse-primary": "#5d5f5f",
+            "secondary-fixed": "#e3e2e2",
+            "on-tertiary-fixed-variant": "#474746",
+            "surface": "#131313",
+            "on-secondary-fixed": "#1b1c1c",
+            "surface-container-low": "#1c1b1b",
+            "on-primary-container": "#636565",
+            "primary": "#ffffff",
+            "surface-dim": "#131313",
+            "on-tertiary-fixed": "#1b1c1c",
+            "surface-bright": "#3a3939",
+            "tertiary-container": "#e4e2e1",
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px",
+          },
+          spacing: {
+            "margin": "0.75rem",
+            "space-md": "0.75rem",
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem",
+            "gutter-desktop": "1rem",
+            "space-xl": "1.5rem",
+            "gutter": "0.5rem",
+            "space-lg": "1rem",
+            "margin-desktop": "1.5rem",
+          },
+          fontFamily: {
+            "body-md": ["Inter"],
+            "headline-lg": ["Inter"],
+            "body-sm": ["Inter"],
+            "headline-sm": ["Inter"],
+            "currency-lg": ["Inter"],
+            "currency-md": ["Inter"],
+            "label-sm": ["Inter"],
+            "label-md": ["Inter"],
+            "label-lg": ["Inter"],
+            "body-lg": ["Inter"],
+            "headline-md": ["Inter"],
+          },
+          fontSize: {
+            "body-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0", "fontWeight": "400" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "500" }],
+            "body-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }],
+            "headline-sm": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "currency-lg": ["20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "500" }],
+            "currency-md": ["14px", { "lineHeight": "18px", "letterSpacing": "0", "fontWeight": "500" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+            "label-md": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "label-lg": ["13px", { "lineHeight": "16px", "letterSpacing": "0", "fontWeight": "500" }],
+            "body-lg": ["15px", { "lineHeight": "22px", "letterSpacing": "0", "fontWeight": "400" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "500" }],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    @layer base {
+      html, body {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #131313;
+        color: #e5e2e1;
+        overscroll-behavior-y: none;
+        overflow-x: hidden;
+      }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+      main > :first-child { margin-top: 0 !important; }
+      main > :last-child { margin-bottom: 0 !important; }
+    }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="bg-surface font-body-md text-body-md text-on-surface antialiased flex flex-col items-center min-h-screen overflow-x-hidden">
+  <div class="w-full max-w-[480px] min-h-screen relative flex flex-col bg-surface overflow-x-hidden">
+
+    <!-- Top App Header -->
+    <header class="fixed top-0 w-full max-w-[480px] z-50 bg-surface border-b border-surface-container-high pt-safe">
+      <div class="h-14 px-margin flex items-center justify-between">
+        <div class="flex items-center gap-space-sm min-w-0">
+          <!-- Back button: only visible in confirm & ledger views per Section 13 -->
+          <button id="header-back-btn" aria-label="Go back" class="hidden w-11 h-11 -ml-space-xs flex items-center justify-center text-on-surface hover:text-primary transition-colors" type="button">
+            <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+          </button>
+          <div class="flex flex-col text-left min-w-0">
+            <h1 id="header-title" class="font-headline-sm text-headline-sm text-on-surface truncate">Ledger Dashboard</h1>
+            <span id="shop-name-header" class="font-label-sm text-label-sm text-on-surface-variant truncate">My Shop</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-space-sm shrink-0">
+          <!-- Settings icon (visual only per Section 13) -->
+          <button aria-label="Settings" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-low text-on-surface-variant hover:text-on-surface transition-colors" type="button">
+            <span class="material-symbols-outlined text-[20px]">settings</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Error Notification Banner with Retry Button -->
+    <div id="error-banner" class="hidden fixed top-16 inset-x-0 max-w-[480px] mx-auto z-50 px-margin">
+      <div class="bg-error-container border border-error text-on-error-container p-space-sm rounded-lg flex items-center justify-between text-body-sm gap-2">
+        <div class="flex items-center gap-space-xs min-w-0 flex-1">
+          <span class="material-symbols-outlined text-[18px] shrink-0 text-error">error</span>
+          <span id="error-message" class="text-body-sm leading-tight break-words">An error occurred</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="error-retry-btn" class="hidden px-2.5 py-1 rounded bg-surface-container text-on-surface font-label-md text-label-md border border-outline-variant hover:bg-surface-container-high active:bg-surface-container-highest transition-colors cursor-pointer select-none" type="button">Retry</button>
+          <button id="error-close-btn" class="text-on-error-container hover:text-on-surface font-bold text-base px-1 transition-colors cursor-pointer" type="button">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN VIEWS CONTAINER -->
+    <main class="flex flex-col relative w-full pt-14 pb-safe bg-surface flex-1">
+
+      <!-- ================================================================ -->
+      <!-- VIEW 1: HOME DASHBOARD                                            -->
+      <!-- ================================================================ -->
+      <div id="view-home" class="flex flex-col w-full px-margin pb-space-xl">
+
+        <!-- Summary Metric Card -->
+        <section class="mt-space-md w-full bg-surface-container-low rounded-lg p-space-md grid grid-cols-2">
+          <!-- Left: Total Udhaar -->
+          <div class="flex flex-col pr-space-md">
+            <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total udhaar</span>
+            <div class="mt-space-xs flex items-baseline">
+              <span id="metric-total-udhaar" class="font-headline-lg text-headline-lg text-error font-medium [font-variant-numeric:tabular-nums]">₹0</span>
+            </div>
+          </div>
+          <!-- Right: Customers -->
+          <div class="flex flex-col pl-space-md">
+            <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Customers</span>
+            <div class="mt-space-xs flex items-baseline">
+              <span id="metric-customer-count" class="font-headline-lg text-headline-lg text-on-surface font-medium [font-variant-numeric:tabular-nums]">0 active</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Voice Core Console (Idle / Recording / Processing states) -->
+        <section class="w-full flex flex-col items-center justify-center my-space-xl">
+
+          <!-- State A: Idle State -->
+          <div id="voice-idle-state" class="flex flex-col items-center">
+            <button aria-label="Tap and speak to add transaction" class="w-[72px] h-[72px] rounded-full bg-primary text-on-primary flex items-center justify-center active:bg-secondary-fixed transition-colors select-none focus:outline-none cursor-pointer" id="voice-record-btn" type="button">
+              <span class="material-symbols-outlined text-[28px] text-on-primary select-none">mic</span>
+            </button>
+            <span class="mt-space-md font-body-sm text-body-sm text-on-surface-variant tracking-normal" id="voice-status-text">
+              Tap and say an entry
+            </span>
+          </div>
+
+          <!-- State B: Recording State -->
+          <div id="voice-recording-state" class="hidden w-full bg-surface-container-low rounded-lg p-space-lg flex flex-col items-center justify-center relative overflow-hidden">
+            <div class="w-full flex items-center justify-between mb-space-md">
+              <div class="flex items-center gap-space-xs">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
+                </span>
+                <span class="font-label-md text-label-md text-on-surface uppercase tracking-wider font-semibold">Live Intake</span>
+              </div>
+              <div class="bg-surface-container px-space-sm py-0.5 rounded text-on-surface-variant font-label-sm text-label-sm">
+                Hindi / Hinglish Auto
+              </div>
+            </div>
+
+            <!-- Live Timer -->
+            <div aria-live="polite" class="font-headline-lg text-headline-lg text-on-surface tabular-nums font-medium tracking-tight mb-space-md" id="recording-timer">
+              00:00
+            </div>
+
+            <!-- Stop Button -->
+            <div class="relative flex items-center justify-center mb-space-sm">
+              <button aria-label="Stop Voice Recording" class="w-[72px] h-[72px] rounded-full bg-surface-container-high hover:bg-surface-container-highest active:bg-surface-variant flex items-center justify-center relative transition-colors focus:outline-none cursor-pointer" id="stop-recording-btn" type="button">
+                <span class="w-5 h-5 bg-error rounded-xs"></span>
+              </button>
+            </div>
+            <span class="font-body-sm text-body-sm text-on-surface-variant">Tap to stop & transcribe</span>
+          </div>
+
+          <!-- State C: Processing State -->
+          <div id="voice-processing-state" class="hidden w-full h-14 bg-surface-container-low rounded-lg border border-surface-container-high flex items-center justify-center gap-space-sm px-space-md">
+            <div class="w-4 h-4 rounded-full border-[1.5px] border-surface-container-highest border-t-primary animate-spin shrink-0"></div>
+            <span class="font-body-md text-body-md text-on-surface-variant font-normal tracking-tight flex items-center">
+              Transcribing<span class="inline-block animate-pulse">...</span>
+            </span>
+            <div class="ml-auto hidden sm:flex items-center">
+              <span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-space-xs py-0.5 rounded">Hinglish / Hindi</span>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- Customer Directory List -->
+        <section class="w-full flex flex-col">
+          <div class="flex items-center justify-between gap-space-sm mb-space-sm">
+            <h2 class="font-headline-md text-headline-md text-on-surface font-medium shrink-0">Customers</h2>
+            <div class="relative flex-1 max-w-[200px]">
+              <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-[16px] pointer-events-none">search</span>
+              <input autocomplete="off" class="w-full h-8 pl-8 pr-space-sm bg-surface-container-low text-on-surface placeholder:text-outline font-body-sm text-body-sm rounded-lg focus:outline-none focus:bg-surface-container transition-colors" id="customer-search-input" placeholder="Search..." spellcheck="false" type="text" />
+            </div>
+          </div>
+
+          <div class="w-full bg-surface-container-low rounded-lg overflow-hidden flex flex-col" id="customer-list">
+            <div class="p-6 text-center text-on-surface-variant text-body-sm">
+              Loading customers...
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- VIEW 2: CONFIRM ENTRY                                             -->
+      <!-- ================================================================ -->
+      <div id="view-confirm" class="hidden flex flex-col w-full px-margin pb-32">
+
+        <!-- Transcript Preview Card -->
+        <section class="mt-space-md mb-space-md w-full bg-surface-container-low rounded-lg p-space-md flex flex-col gap-1.5 border border-surface-container-high">
+          <span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Spoken Transcript</span>
+          <div class="flex items-start gap-space-sm">
+            <span class="material-symbols-outlined text-on-surface-variant text-[20px] shrink-0 mt-0.5">graphic_eq</span>
+            <p class="font-body-lg text-body-lg text-on-surface leading-relaxed select-text italic" id="confirm-transcript-text">
+              —
+            </p>
+          </div>
+        </section>
+
+        <!-- Parsed Fields Form -->
+        <form class="flex flex-col gap-y-4" id="ledger-confirm-form" onsubmit="event.preventDefault();">
+
+          <!-- Customer -->
+          <div class="flex flex-col gap-y-1.5">
+            <div class="flex justify-between items-center">
+              <label class="text-on-surface-variant font-label-md text-label-md" for="field-customer">Customer</label>
+              <span class="hidden text-[10px] font-label-sm uppercase tracking-wider text-error" id="customer-missing-tag">Required</span>
+            </div>
+            <div class="relative flex items-center">
+              <input class="w-full h-11 px-3 bg-surface-container-low border border-surface-container-high rounded-lg font-body-lg text-body-lg text-on-surface focus:border-outline focus:outline-none transition-colors" id="field-customer" placeholder="e.g. Sharma ji" type="text" />
+            </div>
+            <p class="hidden text-error font-label-md text-label-md flex items-center gap-1 mt-0.5" id="customer-validation-msg">
+              <span class="material-symbols-outlined text-[14px]">error</span>
+              <span>Customer name required.</span>
+            </p>
+          </div>
+
+          <!-- Item -->
+          <div class="flex flex-col gap-y-1.5" id="container-field-item">
+            <div class="flex justify-between items-center">
+              <label class="text-on-surface-variant font-label-md text-label-md" for="field-item">Item</label>
+              <span class="hidden text-[10px] font-label-sm uppercase tracking-wider text-error" id="item-missing-tag">Required</span>
+            </div>
+            <input class="w-full h-11 px-3 bg-surface-container-low border border-surface-container-high rounded-lg font-body-lg text-body-lg text-on-surface focus:border-outline focus:outline-none transition-colors" id="field-item" placeholder="e.g. Rice (Chawal)" type="text" />
+            <p class="hidden text-error font-label-md text-label-md flex items-center gap-1 mt-0.5" id="item-validation-msg">
+              <span class="material-symbols-outlined text-[14px]">error</span>
+              <span>Item required for credit / cash transactions.</span>
+            </p>
+          </div>
+
+          <!-- Quantity & Unit Grid -->
+          <div class="grid grid-cols-2 gap-space-md" id="container-field-qty-unit">
+            <div class="flex flex-col gap-y-1.5">
+              <div class="flex justify-between items-center">
+                <label class="text-on-surface-variant font-label-md text-label-md" for="field-qty">Quantity</label>
+                <span class="hidden text-[10px] font-label-sm uppercase tracking-wider text-error" id="qty-missing-tag">Required</span>
+              </div>
+              <input class="w-full h-11 px-3 bg-surface-container-low border border-surface-container-high rounded-lg font-body-lg text-body-lg text-on-surface focus:border-outline focus:outline-none tabular-nums transition-colors" id="field-qty" inputmode="decimal" placeholder="e.g. 5" type="text" />
+            </div>
+            <div class="flex flex-col gap-y-1.5">
+              <div class="flex justify-between items-center">
+                <label class="text-on-surface-variant font-label-md text-label-md" for="field-unit">Unit</label>
+                <span class="hidden text-[10px] font-label-sm uppercase tracking-wider text-error" id="unit-missing-tag">Required</span>
+              </div>
+              <input class="w-full h-11 px-3 bg-surface-container-low border border-surface-container-high rounded-lg font-body-lg text-body-lg text-on-surface focus:border-outline focus:outline-none transition-colors" id="field-unit" placeholder="e.g. kg" type="text" />
+            </div>
+          </div>
+
+          <!-- Amount Field -->
+          <div class="flex flex-col gap-y-1.5">
+            <div class="flex justify-between items-center">
+              <label class="text-on-surface-variant font-label-md text-label-md" for="field-amount">Amount (₹)</label>
+              <span class="hidden text-[10px] font-label-sm uppercase tracking-wider text-error" id="amount-missing-tag">Required</span>
+            </div>
+            <div class="relative flex items-center">
+              <span class="absolute left-3 text-on-surface-variant font-currency-md text-currency-md select-none">₹</span>
+              <input class="w-full h-11 pl-7 pr-3 bg-surface-container-low border border-surface-container-high rounded-lg font-currency-md text-currency-md text-on-surface placeholder:text-on-surface-variant/40 focus:border-outline focus:outline-none tabular-nums transition-colors" id="field-amount" inputmode="decimal" min="0.01" placeholder="0" step="any" type="number" />
+            </div>
+            <p class="hidden text-error font-label-md text-label-md flex items-center gap-1 mt-0.5" id="amount-validation-msg">
+              <span class="material-symbols-outlined text-[14px]">error</span>
+              <span>Amount must be greater than 0.</span>
+            </p>
+          </div>
+
+          <!-- Transaction Type Segmented Control -->
+          <div class="flex flex-col gap-y-1.5 pt-1">
+            <label class="text-on-surface-variant font-label-md text-label-md">Type</label>
+            <div aria-label="Transaction Type" class="h-11 p-1 bg-surface-container-low border border-surface-container-high rounded-lg grid grid-cols-3 gap-1 select-none" role="radiogroup">
+              <button aria-checked="true" class="h-full rounded flex items-center justify-center font-label-md sm:font-label-lg text-label-md sm:text-label-lg transition-colors bg-primary text-on-primary font-medium truncate px-1" id="type-udhaar" role="radio" type="button">
+                Udhaar
+              </button>
+              <button aria-checked="false" class="h-full rounded flex items-center justify-center font-label-md sm:font-label-lg text-label-md sm:text-label-lg transition-colors bg-transparent text-on-surface-variant hover:text-on-surface truncate px-1" id="type-cash" role="radio" type="button">
+                Cash
+              </button>
+              <button aria-checked="false" class="h-full rounded flex items-center justify-center font-label-md sm:font-label-lg text-label-md sm:text-label-lg transition-colors bg-transparent text-on-surface-variant hover:text-on-surface truncate px-1" id="type-received" role="radio" type="button">
+                Payment rec.
+              </button>
+            </div>
+          </div>
+
+        </form>
+
+        <!-- Sticky Bottom Action Deck -->
+        <div class="fixed bottom-0 inset-x-0 max-w-[480px] mx-auto bg-surface border-t border-surface-container-high p-4 z-40 pb-safe">
+          <div class="grid grid-cols-2 gap-space-md">
+            <button class="h-11 rounded-lg bg-surface-container-low border border-surface-container-high text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-1.5 active:bg-surface-container-high transition-colors cursor-pointer" id="btn-re-record" type="button">
+              <span class="material-symbols-outlined text-[18px]">mic</span>
+              Re-record
+            </button>
+            <button class="h-11 rounded-lg bg-surface-container border border-surface-container-high text-on-surface-variant/40 font-label-lg text-label-lg flex items-center justify-center gap-1.5 cursor-not-allowed transition-colors select-none" disabled id="save-entry-btn" type="button">
+              <span class="material-symbols-outlined text-[18px]">check</span>
+              Save entry
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- VIEW 3: CUSTOMER LEDGER                                           -->
+      <!-- ================================================================ -->
+      <div id="view-ledger" class="hidden flex flex-col w-full px-margin pb-space-xl">
+
+        <!-- Balance Metric Card -->
+        <div class="mt-space-md mb-space-md bg-surface-container-low border border-surface-container-high rounded-lg p-space-md">
+          <div class="flex items-center justify-between mb-1">
+            <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Balance Due (Udhaar)</span>
+            <span class="text-[11px] text-on-surface-variant font-mono tracking-tight" id="ledger-sync-time">Running Balance</span>
+          </div>
+          <div class="flex items-baseline justify-between mt-1">
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-[28px] leading-8 font-medium font-mono text-[#C97B7B] tracking-tight" id="ledger-balance-val">₹0</span>
+              <span class="text-[11px] text-on-surface-variant" id="ledger-balance-subtitle">to collect</span>
+            </div>
+            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded border border-surface-container-high text-on-surface-variant text-[11px]">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#C97B7B]" id="ledger-status-dot"></span>
+              <span id="ledger-status-tag">Pending</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ledger Entries Timeline -->
+        <div class="flex flex-col gap-space-xs">
+          <div class="flex items-center justify-between px-0.5 mb-space-xs">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface font-medium">Entries</h3>
+            <span class="text-[11px] text-on-surface-variant font-mono" id="ledger-entries-count">0 entries</span>
+          </div>
+          <div class="w-full bg-surface-container-low border border-surface-container-high rounded-lg overflow-hidden flex flex-col divide-y divide-surface-container-high" id="ledger-entries-list">
+            <div class="p-6 text-center text-on-surface-variant text-body-sm">
+              Loading entries...
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

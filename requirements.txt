@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlmodel
+python-multipart
+reportlab
+httpx
+python-dotenv
+pytest
+

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#131313;}body{overscroll-behavior:none;font-family:'Inter',sans-serif;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-container-highest": "#353534", "surface-container-high": "#2a2a2a", "secondary-fixed-dim": "#c7c6c6", "primary-container": "#e2e2e2", "surface-container-low": "#1c1b1b", "secondary": "#c7c6c6", "inverse-surface": "#e5e2e1", "surface-bright": "#3a3939", "tertiary": "#ffffff", "on-secondary-fixed-variant": "#464747", "on-surface-variant": "#c4c7c8", "on-background": "#e5e2e1", "surface": "#131313", "on-primary-fixed": "#1a1c1c", "surface-tint": "#c6c6c7", "tertiary-fixed-dim": "#c8c6c5", "on-primary-fixed-variant": "#454747", "inverse-on-surface": "#313030", "on-secondary-container": "#b5b5b5", "primary-fixed": "#e2e2e2", "primary-fixed-dim": "#c6c6c7", "surface-container": "#201f1f", "background": "#131313", "on-tertiary-fixed-variant": "#474746", "surface-variant": "#353534", "surface-container-lowest": "#0e0e0e", "on-tertiary": "#303030", "tertiary-fixed": "#e4e2e1", "surface-dim": "#131313", "on-error-container": "#ffdad6", "on-surface": "#e5e2e1", "on-secondary-fixed": "#1b1c1c", "error": "#ffb4ab", "outline": "#8e9192", "on-primary-container": "#636565", "outline-variant": "#444748", "on-error": "#690005", "on-tertiary-fixed": "#1b1c1c", "secondary-fixed": "#e3e2e2", "tertiary-container": "#e4e2e1", "error-container": "#93000a", "on-tertiary-container": "#656464", "on-primary": "#2f3131", "primary": "#ffffff", "inverse-primary": "#5d5f5f", "secondary-container": "#464747", "on-secondary": "#303031" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-md": "0.75rem", "space-lg": "1rem", "margin-desktop": "1.5rem", "gutter-desktop": "1rem", "space-xs": "0.25rem", "margin": "0.75rem", "space-xl": "1.5rem", "gutter": "0.5rem", "space-sm": "0.5rem" }, "fontFamily": { "headline-sm": ["Inter"], "headline-lg": ["Inter"], "label-md": ["Inter"], "label-lg": ["Inter"], "currency-md": ["Inter"], "currency-lg": ["Inter"], "body-lg": ["Inter"], "headline-md": ["Inter"], "body-md": ["Inter"], "label-sm": ["Inter"], "body-sm": ["Inter"] }, "fontSize": { "headline-sm": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "500" }], "label-md": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }], "label-lg": ["13px", { "lineHeight": "16px", "letterSpacing": "0", "fontWeight": "500" }], "currency-md": ["14px", { "lineHeight": "18px", "letterSpacing": "0", "fontWeight": "500" }], "currency-lg": ["20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "500" }], "body-lg": ["15px", { "lineHeight": "22px", "letterSpacing": "0", "fontWeight": "400" }], "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "500" }], "body-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0", "fontWeight": "400" }], "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.04em", "fontWeight": "500" }], "body-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md min-h-screen flex flex-col selection:bg-surface-container-highest"><header class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><button aria-label="Go back" class="w-11 h-11 -ml-space-xs flex items-center justify-center text-on-surface hover:text-primary transition-colors" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[20px]">arrow_back</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight truncate">Confirm Entry</h1></div><div class="flex items-center"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 px-margin pb-safe bg-surface"><div class="flex flex-col w-full max-w-[480px] mx-auto pb-24 text-on-surface">
+<!-- Customer Context & Profile Bar -->
+<div class="flex items-center justify-between py-space-sm px-margin">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center border border-outline-variant/40 shrink-0">
+<span class="font-headline-sm text-headline-sm text-primary font-medium">S</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-primary font-medium tracking-tight">Sharma ji</span>
+<span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border border-outline-variant/60 text-secondary font-medium">Regular</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary tracking-normal">+91 98765 43210</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<a aria-label="Call Sharma ji" class="w-9 h-9 rounded-lg bg-surface-container border border-outline-variant/60 flex items-center justify-center text-primary active:bg-surface-container-high transition-colors" href="tel:+919876543210">
+<span class="material-symbols-outlined text-[18px]">call</span>
+</a>
+<button aria-label="WhatsApp reminder" class="w-9 h-9 rounded-lg bg-surface-container border border-outline-variant/60 flex items-center justify-center text-primary active:bg-surface-container-high transition-colors" onclick="triggerToast('Payment reminder sent to Sharma ji')">
+<span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+</div>
+</div>
+<!-- Balance Metric Card -->
+<div class="px-margin pt-space-xs pb-space-sm">
+<div class="bg-surface-container border border-outline-variant/60 rounded-lg p-space-md">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-md text-label-md text-secondary tracking-wider uppercase">Balance Due (Udhaar)</span>
+<span class="text-[11px] text-secondary font-mono tracking-tight">Synced 10:45 AM</span>
+</div>
+<div class="flex items-baseline justify-between mt-1">
+<div class="flex items-baseline gap-1.5">
+<span class="text-[28px] leading-8 font-medium font-mono text-[#C97B7B] tracking-tight">₹600</span>
+<span class="text-[11px] text-secondary">to collect</span>
+</div>
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded border border-outline-variant/60 text-secondary text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#C97B7B]"></span>
+<span>Pending</span>
+</div>
+</div>
+<!-- Quick mini filter / ledger stats -->
+<div class="grid grid-cols-2 gap-space-sm pt-space-md mt-space-md border-t border-outline-variant/40">
+<div>
+<span class="block text-[11px] text-secondary mb-0.5">Total Given (May)</span>
+<span class="text-[13px] font-mono text-primary font-medium">₹1,400</span>
+</div>
+<div>
+<span class="block text-[11px] text-secondary mb-0.5">Received (May)</span>
+<span class="text-[13px] font-mono text-[#7BA68A] font-medium">₹800</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Search / Quick Filter Bar -->
+<div class="px-margin py-space-xs flex items-center gap-space-sm">
+<div class="flex-1 bg-surface-container border border-outline-variant/60 rounded-lg h-9 px-space-md flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[16px]">search</span>
+<input class="bg-transparent border-none text-[12px] text-primary placeholder-secondary/70 focus:outline-none w-full" id="searchInput" oninput="filterEntries(this.value)" placeholder="Search entries, items, receipts..." type="text"/>
+</div>
+<button class="h-9 px-2.5 rounded-lg bg-surface-container border border-outline-variant/60 text-secondary text-[11px] font-medium flex items-center gap-1 active:bg-surface-container-high transition-colors" onclick="toggleStatementModal()">
+<span class="material-symbols-outlined text-[15px]">file_download</span>
+<span>PDF</span>
+</button>
+</div>
+<!-- Ledger Timeline -->
+<div class="px-margin pt-space-sm flex flex-col gap-space-md">
+<!-- Group: TODAY, 12 MAY -->
+<div class="date-group flex flex-col gap-space-xs">
+<div class="flex items-center justify-between px-0.5">
+<span class="text-[11px] font-medium text-secondary uppercase tracking-wider">Today, 12 May 2024</span>
+<span class="text-[11px] text-secondary font-mono">1 entry</span>
+</div>
+<div class="bg-surface-container border border-outline-variant/60 rounded-lg overflow-hidden">
+<!-- Entry 1 -->
+<div class="entry-row p-space-md flex items-center justify-between active:bg-surface-container-high transition-colors" data-keywords="rice udhaar today">
+<div class="flex flex-col gap-1 min-w-0 pr-space-sm">
+<span class="font-body-md text-body-md text-primary font-normal truncate">Rice, 5 kg</span>
+<div class="flex items-center gap-1.5">
+<span class="text-[10px] text-secondary uppercase tracking-wider px-1.5 py-0.2 rounded border border-outline-variant/60">Udhaar</span>
+<span class="text-[11px] text-secondary font-mono">10:42 AM</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<span class="text-[14px] font-medium font-mono text-[#C97B7B]">₹600</span>
+<button aria-label="View Invoice" class="w-8 h-8 rounded-lg bg-surface-container-low border border-outline-variant/60 flex items-center justify-center text-secondary hover:text-primary active:bg-surface-container transition-colors" onclick="showReceiptModal('INV-1094', 'Rice, 5 kg', '₹600', 'Udhaar', 'Today, 10:42 AM')">
+<span class="material-symbols-outlined text-[17px]">description</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Group: 08 MAY 2024 -->
+<div class="date-group flex flex-col gap-space-xs">
+<div class="flex items-center justify-between px-0.5">
+<span class="text-[11px] font-medium text-secondary uppercase tracking-wider">08 May 2024</span>
+<span class="text-[11px] text-secondary font-mono">2 entries</span>
+</div>
+<div class="bg-surface-container border border-outline-variant/60 rounded-lg overflow-hidden divide-y divide-outline-variant/40">
+<!-- Entry 2 (Payment Received) -->
+<div class="entry-row p-space-md flex items-center justify-between active:bg-surface-container-high transition-colors" data-keywords="payment received upi cash">
+<div class="flex flex-col gap-1 min-w-0 pr-space-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[#7BA68A] text-[15px]">arrow_downward</span>
+<span class="font-body-md text-body-md text-primary font-normal truncate">Payment received</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="text-[10px] text-secondary uppercase tracking-wider px-1.5 py-0.2 rounded border border-outline-variant/60">UPI / Cash</span>
+<span class="text-[11px] text-secondary font-mono">04:15 PM</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<span class="text-[14px] font-medium font-mono text-[#7BA68A]">-₹500</span>
+<button aria-label="View Receipt" class="w-8 h-8 rounded-lg bg-surface-container-low border border-outline-variant/60 flex items-center justify-center text-secondary hover:text-primary active:bg-surface-container transition-colors" onclick="showReceiptModal('REC-8821', 'Account Payment (GPay)', '-₹500', 'Settled', '08 May, 04:15 PM')">
+<span class="material-symbols-outlined text-[17px]">receipt</span>
+</button>
+</div>
+</div>
+<!-- Entry 3 (Udhaar) -->
+<div class="entry-row p-space-md flex items-center justify-between active:bg-surface-container-high transition-colors" data-keywords="mustard oil sugar udhaar">
+<div class="flex flex-col gap-1 min-w-0 pr-space-sm">
+<span class="font-body-md text-body-md text-primary font-normal truncate">Mustard Oil, 2 L &amp; Sugar, 1 kg</span>
+<div class="flex items-center gap-1.5">
+<span class="text-[10px] text-secondary uppercase tracking-wider px-1.5 py-0.2 rounded border border-outline-variant/60">Udhaar</span>
+<span class="text-[11px] text-secondary font-mono">11:30 AM</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<span class="text-[14px] font-medium font-mono text-[#C97B7B]">₹380</span>
+<button aria-label="View Invoice" class="w-8 h-8 rounded-lg bg-surface-container-low border border-outline-variant/60 flex items-center justify-center text-secondary hover:text-primary active:bg-surface-container transition-colors" onclick="showReceiptModal('INV-1082', 'Mustard Oil, 2L + Sugar, 1kg', '₹380', 'Udhaar', '08 May, 11:30 AM')">
+<span class="material-symbols-outlined text-[17px]">description</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Group: 28 APR 2024 -->
+<div class="date-group flex flex-col gap-space-xs">
+<div class="flex items-center justify-between px-0.5">
+<span class="text-[11px] font-medium text-secondary uppercase tracking-wider">28 Apr 2024</span>
+<span class="text-[11px] text-secondary font-mono">2 entries</span>
+</div>
+<div class="bg-surface-container border border-outline-variant/60 rounded-lg overflow-hidden divide-y divide-outline-variant/40">
+<!-- Entry 4 (Udhaar) -->
+<div class="entry-row p-space-md flex items-center justify-between active:bg-surface-container-high transition-colors" data-keywords="wheat flour atta udhaar">
+<div class="flex flex-col gap-1 min-w-0 pr-space-sm">
+<span class="font-body-md text-body-md text-primary font-normal truncate">Wheat Flour (Atta), 10 kg</span>
+<div class="flex items-center gap-1.5">
+<span class="text-[10px] text-secondary uppercase tracking-wider px-1.5 py-0.2 rounded border border-outline-variant/60">Udhaar</span>
+<span class="text-[11px] text-secondary font-mono">06:20 PM</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<span class="text-[14px] font-medium font-mono text-[#C97B7B]">₹420</span>
+<button aria-label="View Invoice" class="w-8 h-8 rounded-lg bg-surface-container-low border border-outline-variant/60 flex items-center justify-center text-secondary hover:text-primary active:bg-surface-container transition-colors" onclick="showReceiptModal('INV-1033', 'Wheat Flour (Atta), 10 kg', '₹420', 'Udhaar', '28 Apr, 06:20 PM')">
+<span class="material-symbols-outlined text-[17px]">description</span>
+</button>
+</div>
+</div>
+<!-- Entry 5 (Cash Instant) -->
+<div class="entry-row p-space-md flex items-center justify-between active:bg-surface-container-high transition-colors" data-keywords="spices dal cash paid">
+<div class="flex flex-col gap-1 min-w-0 pr-space-sm">
+<span class="font-body-md text-body-md text-primary font-normal truncate">Spices &amp; Dal</span>
+<div class="flex items-center gap-1.5">
+<span class="text-[10px] text-secondary uppercase tracking-wider px-1.5 py-0.2 rounded border border-outline-variant/60">Cash</span>
+<span class="text-[11px] text-secondary font-mono">01:10 PM</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<span class="text-[14px] font-medium font-mono text-primary">₹300</span>
+<button aria-label="View Invoice" class="w-8 h-8 rounded-lg bg-surface-container-low border border-outline-variant/60 flex items-center justify-center text-secondary hover:text-primary active:bg-surface-container transition-colors" onclick="showReceiptModal('INV-1029', 'Spices &amp; Dal', '₹300', 'Cash', '28 Apr, 01:10 PM')">
+<span class="material-symbols-outlined text-[17px]">description</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Empty Search State (hidden by default) -->
+<div class="hidden p-space-xl text-center flex flex-col items-center justify-center gap-space-xs" id="noResultsState">
+<span class="material-symbols-outlined text-secondary text-[24px]">manage_search</span>
+<span class="text-[13px] text-primary">No transactions found</span>
+<span class="text-[11px] text-secondary">Try searching by item name or payment type</span>
+</div>
+</div>
+<!-- Persistent Floating Bottom Action Bar -->
+<div class="fixed bottom-0 inset-x-0 bg-surface/95 backdrop-blur-md border-t border-outline-variant/60 px-margin py-3 z-40">
+<div class="max-w-[480px] mx-auto flex items-center gap-space-sm">
+<button class="flex-1 h-11 bg-primary text-on-primary font-medium rounded-lg flex items-center justify-center gap-2 active:opacity-90 transition-opacity" id="voiceAddBtn" onclick="triggerVoiceAssistant()">
+<span class="material-symbols-outlined text-[18px]">mic</span>
+<span class="font-headline-sm text-headline-sm">Add entry by voice</span>
+</button>
+<button class="h-11 px-3 bg-surface-container border border-outline-variant/60 text-primary font-medium rounded-lg flex items-center justify-center gap-1 active:bg-surface-container-high transition-colors" onclick="triggerManualEntry()" title="Manual Entry">
+<span class="material-symbols-outlined text-[18px]">edit_note</span>
+</button>
+</div>
+</div>
+<!-- Voice Listening Sheet Modal -->
+<div class="fixed inset-0 bg-black/75 z-50 hidden flex-col justify-end" id="voiceSheet">
+<div class="bg-surface-container border-t border-outline-variant/60 rounded-t-xl p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C97B7B] opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#C97B7B]"></span>
+</span>
+<span class="text-[12px] font-medium text-secondary uppercase tracking-wider">Listening in Hindi / Hinglish</span>
+</div>
+<button class="text-secondary hover:text-primary" onclick="closeVoiceAssistant()">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="min-h-[64px] bg-surface rounded-lg p-space-md border border-outline-variant/40 flex items-center">
+<p class="text-[14px] text-primary font-normal leading-relaxed" id="voiceLiveText">
+          "Sharma ji 2 kilo Cheeni aur 1 packet Tel udhaar..."
+        </p>
+</div>
+<div class="flex items-center justify-between text-[11px] text-secondary">
+<span>Parsed: <strong class="text-primary">2 items</strong></span>
+<span>Amount detected: <strong class="text-[#C97B7B] font-mono">₹210</strong></span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm pt-1">
+<button class="h-10 rounded-lg bg-surface-container-low border border-outline-variant/60 text-secondary text-[13px] font-medium" onclick="closeVoiceAssistant()">
+          Cancel
+        </button>
+<button class="h-10 rounded-lg bg-primary text-on-primary text-[13px] font-medium" onclick="saveVoiceEntry()">
+          Confirm Entry
+        </button>
+</div>
+</div>
+</div>
+<!-- Receipt Detail Bottom Sheet Modal -->
+<div class="fixed inset-0 bg-black/75 z-50 hidden flex-col justify-end" id="receiptModal">
+<div class="bg-surface-container border-t border-outline-variant/60 rounded-t-xl p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="text-[12px] font-medium text-secondary uppercase tracking-wider" id="receiptNumber">INVOICE #</span>
+<button class="text-secondary hover:text-primary" onclick="closeReceiptModal()">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="bg-surface rounded-lg p-space-md border border-outline-variant/40 flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-sm border-b border-outline-variant/40">
+<div>
+<div class="text-[14px] text-primary font-medium" id="modalItem">Item name</div>
+<div class="text-[11px] text-secondary" id="modalDate">Date &amp; Time</div>
+</div>
+<div class="text-right">
+<div class="text-[16px] font-mono font-medium" id="modalAmount">₹0</div>
+<span class="text-[10px] text-secondary uppercase px-1.5 py-0.5 rounded border border-outline-variant/60" id="modalTag">Udhaar</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-[11px] text-secondary pt-1">
+<span>Khata account</span>
+<span class="text-primary">Sharma ji (+91 98765 43210)</span>
+</div>
+<div class="flex items-center justify-between text-[11px] text-secondary">
+<span>Billing Store</span>
+<span class="text-primary">Gupta Kirana &amp; General Store</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<button class="h-10 rounded-lg bg-surface-container-low border border-outline-variant/60 text-secondary text-[13px] font-medium flex items-center justify-center gap-1.5" onclick="triggerToast('Statement shared to WhatsApp')">
+<span class="material-symbols-outlined text-[16px]">share</span>
+<span>Share Bill</span>
+</button>
+<button class="h-10 rounded-lg bg-primary text-on-primary text-[13px] font-medium flex items-center justify-center gap-1.5" onclick="triggerToast('PDF downloaded')">
+<span class="material-symbols-outlined text-[16px]">download</span>
+<span>Download PDF</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Notification Toast Container -->
+<div class="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-surface-container-highest text-primary border border-outline-variant px-3 py-1.5 rounded-lg text-[12px] font-medium tracking-tight shadow-none opacity-0 pointer-events-none transition-opacity duration-150" id="toast">
+    Notification
+  </div>
+</div>
+<script>
+  function triggerVoiceAssistant() {
+    const sheet = document.getElementById('voiceSheet');
+    if (sheet) sheet.classList.remove('hidden');
+    sheet.classList.add('flex');
+  }
+
+  function closeVoiceAssistant() {
+    const sheet = document.getElementById('voiceSheet');
+    if (sheet) {
+      sheet.classList.add('hidden');
+      sheet.classList.remove('flex');
+    }
+  }
+
+  function saveVoiceEntry() {
+    closeVoiceAssistant();
+    triggerToast('Added ₹210 to Sharma ji (Udhaar)');
+  }
+
+  function showReceiptModal(id, item, amount, tag, date) {
+    document.getElementById('receiptNumber').textContent = id;
+    document.getElementById('modalItem').textContent = item;
+    document.getElementById('modalAmount').textContent = amount;
+    document.getElementById('modalTag').textContent = tag;
+    document.getElementById('modalDate').textContent = date;
+    
+    const amtEl = document.getElementById('modalAmount');
+    if (amount.startsWith('-')) {
+      amtEl.className = 'text-[16px] font-mono font-medium text-[#7BA68A]';
+    } else {
+      amtEl.className = 'text-[16px] font-mono font-medium text-[#C97B7B]';
+    }
+
+    const modal = document.getElementById('receiptModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  function closeReceiptModal() {
+    const modal = document.getElementById('receiptModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  function triggerToast(text) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = text;
+    toast.classList.remove('opacity-0', 'pointer-events-none');
+    toast.classList.add('opacity-100');
+    setTimeout(() => {
+      toast.classList.remove('opacity-100');
+      toast.classList.add('opacity-0', 'pointer-events-none');
+    }, 2200);
+  }
+
+  function triggerManualEntry() {
+    triggerToast('Opening manual entry form');
+  }
+
+  function toggleStatementModal() {
+    triggerToast('Generating monthly PDF statement for Sharma ji');
+  }
+
+  function filterEntries(term) {
+    const q = term.toLowerCase().trim();
+    const rows = document.querySelectorAll('.entry-row');
+    const groups = document.querySelectorAll('.date-group');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const keywords = row.getAttribute('data-keywords') || '';
+      const text = row.innerText.toLowerCase();
+      if (!q || keywords.includes(q) || text.includes(q)) {
+        row.style.display = 'flex';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    groups.forEach(group => {
+      const hasVisible = Array.from(group.querySelectorAll('.entry-row')).some(r => r.style.display !== 'none');
+      group.style.display = hasVisible ? 'flex' : 'none';
+    });
+
+    const noRes = document.getElementById('noResultsState');
+    if (noRes) {
+      if (visibleCount === 0 && q) {
+        noRes.classList.remove('hidden');
+      } else {
+        noRes.classList.add('hidden');
+      }
+    }
+  }
+</script></main></body></html>

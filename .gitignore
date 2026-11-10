@@ -1,0 +1,11 @@
+.env
+*.db
+*.sqlite
+*.pdf
+__pycache__/
+*.pyc
+ffmpeg.exe
+.pytest_cache/
+.venv/
+venv/
+invoices/
