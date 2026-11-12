@@ -14,10 +14,106 @@ from sqlmodel import Field, Session, SQLModel, create_engine, select
 # Models
 # ---------------------------------------------------------------------------
 
+class ShopOwner(SQLModel, table=True):
+    __tablename__ = "shop_owner"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    full_name: str
+    email: str = Field(index=True, unique=True)
+    mobile_number: str = Field(index=True, unique=True)
+    password_hash: str
+    email_verified: bool = Field(default=False)
+    phone_verified: bool = Field(default=False)
+    account_status: str = Field(default="active")  # active | suspended | deactivated
+    role: str = Field(default="owner")  # owner | admin
+    profile_image: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_login: Optional[datetime] = None
+
+
+class Shop(SQLModel, table=True):
+    __tablename__ = "shop"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    owner_id: int = Field(foreign_key="shop_owner.id", index=True)
+    shop_name: str = Field(default="My Shop")
+    shop_category: str = Field(default="Grocery Store")
+    custom_category: Optional[str] = None
+    shop_description: Optional[str] = None
+    shop_mobile_number: str = Field(default="")
+    alternative_mobile_number: Optional[str] = None
+    shop_email: Optional[str] = None
+    opening_time: str = Field(default="09:00 AM")
+    closing_time: str = Field(default="09:00 PM")
+    weekly_closing_day: str = Field(default="None")
+    house_number: Optional[str] = None
+    building_name: Optional[str] = None
+    street: Optional[str] = None
+    locality: Optional[str] = None
+    city: str = Field(default="")
+    state: str = Field(default="")
+    pincode: str = Field(default="")
+    country: str = Field(default="India")
+    complete_address: str = Field(default="")
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    google_place_id: Optional[str] = None
+    google_maps_url: Optional[str] = None
+    profile_image: Optional[str] = None
+    verification_status: str = Field(default="pending")  # pending | verified | rejected
+    is_registration_complete: bool = Field(default=False)
+    registration_step: int = Field(default=1)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class OTPVerification(SQLModel, table=True):
+    __tablename__ = "otp_verification"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    owner_id: Optional[int] = Field(default=None, foreign_key="shop_owner.id", index=True)
+    target: str = Field(index=True)  # email or phone number
+    otp_type: str = Field(default="email")  # email | phone
+    otp_hash: str
+    expires_at: datetime
+    attempts: int = Field(default=0)
+    is_used: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ShopSession(SQLModel, table=True):
+    __tablename__ = "shop_session"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    owner_id: int = Field(foreign_key="shop_owner.id", index=True)
+    token: str = Field(unique=True, index=True)
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    device_info: Optional[str] = None
+    is_active: bool = Field(default=True)
+    expires_at: datetime
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_activity: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class LoginActivity(SQLModel, table=True):
+    __tablename__ = "login_activity"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    owner_id: Optional[int] = Field(default=None, index=True)
+    identifier: str
+    action: str  # login_success | login_failed | registered | otp_verified | password_reset | profile_updated
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 class Customer(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     phone: Optional[str] = None
+    shop_id: Optional[int] = Field(default=None, foreign_key="shop.id", index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -42,8 +138,21 @@ engine = create_engine(DATABASE_URL, echo=False)
 
 
 def create_db_and_tables(eng=None):
-    """Create all tables. Pass *eng* to use a custom engine (e.g. in-memory for tests)."""
-    SQLModel.metadata.create_all(eng or engine)
+    """Create all tables and perform safe schema migrations."""
+    e = eng or engine
+    SQLModel.metadata.create_all(e)
+
+    # Check and migrate customer table if shop_id is missing
+    with e.connect() as conn:
+        try:
+            from sqlalchemy import text
+            res = conn.execute(text("PRAGMA table_info(customer);")).fetchall()
+            col_names = [r[1] for r in res]
+            if "shop_id" not in col_names and len(col_names) > 0:
+                conn.execute(text("ALTER TABLE customer ADD COLUMN shop_id INTEGER REFERENCES shop(id);"))
+                conn.commit()
+        except Exception:
+            pass
 
 
 def get_session():
@@ -65,10 +174,13 @@ def _normalize_name(name: str) -> str:
     return " ".join(tokens)
 
 
-def find_customer(session: Session, name: str) -> Optional[Customer]:
+def find_customer(session: Session, name: str, shop_id: Optional[int] = None) -> Optional[Customer]:
     """Find an existing customer by fuzzy name match, or None if not found."""
     norm_input = _normalize_name(name)
-    customers = session.exec(select(Customer)).all()
+    query = select(Customer)
+    if shop_id is not None:
+        query = query.where(Customer.shop_id == shop_id)
+    customers = session.exec(query).all()
 
     best_match: Optional[Customer] = None
     best_ratio: float = 0.0
@@ -88,14 +200,14 @@ def find_customer(session: Session, name: str) -> Optional[Customer]:
     return None
 
 
-def find_or_create_customer(session: Session, name: str) -> Customer:
+def find_or_create_customer(session: Session, name: str, shop_id: Optional[int] = None) -> Customer:
     """Find an existing customer by fuzzy name match, or create a new one."""
-    existing = find_customer(session, name)
+    existing = find_customer(session, name, shop_id=shop_id)
     if existing is not None:
         return existing
 
     # No match — create new customer, preserving the spoken name
-    customer = Customer(name=name)
+    customer = Customer(name=name, shop_id=shop_id)
     session.add(customer)
     session.commit()
     session.refresh(customer)
@@ -184,9 +296,12 @@ def compute_balance(session: Session, customer_id: int) -> float:
     return balance
 
 
-def get_customers_with_balance(session: Session) -> list[dict]:
+def get_customers_with_balance(session: Session, shop_id: Optional[int] = None) -> list[dict]:
     """Return id, name, balance, last_activity for every customer."""
-    customers = session.exec(select(Customer)).all()
+    query = select(Customer)
+    if shop_id is not None:
+        query = query.where(Customer.shop_id == shop_id)
+    customers = session.exec(query).all()
     result = []
     for c in customers:
         balance = compute_balance(session, c.id)

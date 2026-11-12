@@ -3,11 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport" />
-  <title>Voice Khata</title>
+  <title>Voice Khata — Shop Owner & Ledger Platform</title>
   <link href="https://fonts.googleapis.com" rel="preconnect" />
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <!-- Leaflet CSS for universal interactive dark maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script id="tailwind-config">
     tailwind.config = {
@@ -81,17 +84,17 @@
             "margin-desktop": "1.5rem",
           },
           fontFamily: {
-            "body-md": ["Inter"],
-            "headline-lg": ["Inter"],
-            "body-sm": ["Inter"],
-            "headline-sm": ["Inter"],
-            "currency-lg": ["Inter"],
-            "currency-md": ["Inter"],
-            "label-sm": ["Inter"],
-            "label-md": ["Inter"],
-            "label-lg": ["Inter"],
-            "body-lg": ["Inter"],
-            "headline-md": ["Inter"],
+            "body-md": ["Inter", "sans-serif"],
+            "headline-lg": ["Inter", "sans-serif"],
+            "body-sm": ["Inter", "sans-serif"],
+            "headline-sm": ["Inter", "sans-serif"],
+            "currency-lg": ["Inter", "sans-serif"],
+            "currency-md": ["Inter", "sans-serif"],
+            "label-sm": ["Inter", "sans-serif"],
+            "label-md": ["Inter", "sans-serif"],
+            "label-lg": ["Inter", "sans-serif"],
+            "body-lg": ["Inter", "sans-serif"],
+            "headline-md": ["Inter", "sans-serif"],
           },
           fontSize: {
             "body-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0", "fontWeight": "400" }],
@@ -126,26 +129,11 @@
       main > :last-child { margin-bottom: 0 !important; }
     }
 
-    /* Visible sleek modern scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #18181b;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #3f3f46;
-      border-radius: 9999px;
-      border: 2px solid #18181b;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #6366f1;
-    }
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: #3f3f46 #18181b;
-    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #18181b; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 9999px; border: 2px solid #18181b; }
+    ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+    * { scrollbar-width: thin; scrollbar-color: #3f3f46 #18181b; }
 
     @keyframes soundwave {
       0%, 100% { height: 8px; }
@@ -168,8 +156,17 @@
       0%, 100% { transform: scale(1); opacity: 0.35; }
       50% { transform: scale(1.12); opacity: 0.65; }
     }
-    .orb-glow {
-      animation: orb-pulse 3s ease-in-out infinite;
+    .orb-glow { animation: orb-pulse 3s ease-in-out infinite; }
+
+    /* Leaflet dark custom styling */
+    .leaflet-container {
+      background: #18181b !important;
+      font-family: 'Inter', sans-serif !important;
+    }
+    .leaflet-bar a {
+      background-color: #27272a !important;
+      border-color: #3f3f46 !important;
+      color: #e4e4e7 !important;
     }
   </style>
 </head>
@@ -180,32 +177,82 @@
     <header class="fixed top-0 inset-x-0 z-50 bg-surface/95 backdrop-blur-md border-b border-surface-container-high pt-safe">
       <div class="max-w-4xl mx-auto h-16 px-4 sm:px-6 flex items-center justify-between">
         <div class="flex items-center gap-space-sm min-w-0">
-          <!-- Back button: only visible in confirm & ledger views per Section 13 -->
-          <button id="header-back-btn" aria-label="Go back" class="hidden w-11 h-11 -ml-space-xs flex items-center justify-center text-on-surface hover:text-primary transition-colors" type="button">
+          <!-- Back button: visible in sub-views -->
+          <button id="header-back-btn" aria-label="Go back" class="hidden w-10 h-10 -ml-2 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container transition-colors" type="button">
             <span class="material-symbols-outlined text-[20px]">arrow_back</span>
           </button>
           <div class="flex flex-col text-left min-w-0">
-            <h1 id="header-title" class="font-headline-sm text-headline-sm text-on-surface truncate">Ledger Dashboard</h1>
+            <div class="flex items-center gap-2">
+              <h1 id="header-title" class="font-headline-sm text-headline-sm text-on-surface truncate">Ledger Dashboard</h1>
+              <span id="role-badge" class="hidden text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-950/80 text-indigo-400 border border-indigo-500/30">Owner</span>
+            </div>
             <span id="shop-name-header" class="font-label-sm text-label-sm text-on-surface-variant truncate">My Shop</span>
           </div>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          <!-- Manual Entry Button -->
-          <button id="btn-manual-entry" onclick="window.openManualEntry && window.openManualEntry(window.state?.currentView === 'ledger' ? (window.state?.currentCustomerName || '') : '')" aria-label="Add manual entry" class="h-9 px-2.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 font-label-md text-label-md flex items-center gap-1 transition-all active:scale-95 cursor-pointer" type="button">
+          <!-- Manual Entry Button (Fast Transaction Logging) -->
+          <button id="btn-manual-entry" aria-label="Add manual entry" class="h-9 px-2.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 font-label-md text-label-md flex items-center gap-1 transition-all active:scale-95 cursor-pointer" type="button">
             <span class="material-symbols-outlined text-[18px]">add</span>
-            <span class="font-medium">New Entry</span>
+            <span class="font-medium hidden sm:inline">New Entry</span>
           </button>
-          <!-- Settings icon (visual only per Section 13) -->
-          <button aria-label="Settings" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-container-low text-on-surface-variant hover:text-on-surface transition-colors" type="button">
+
+          <!-- Storefront / Dashboard Button -->
+          <button id="btn-header-store" title="Shop Profile & Dashboard" aria-label="Shop Dashboard" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer" type="button">
             <span class="material-symbols-outlined text-[18px]">storefront</span>
           </button>
+
+          <!-- Admin Portal Pill Button (Only shown if admin or allowed) -->
+          <button id="btn-header-admin" title="Admin Portal" aria-label="Admin Portal" class="hidden h-9 px-2.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-label-sm text-label-sm flex items-center gap-1 transition-colors cursor-pointer" type="button">
+            <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+            <span class="font-medium hidden sm:inline">Admin</span>
+          </button>
+
+          <!-- User Profile / Auth Button -->
+          <div class="relative" id="user-menu-container">
+            <!-- When Guest: Sign In Button -->
+            <button id="btn-header-login" class="h-9 px-3 rounded-lg bg-white/10 hover:bg-white/15 border border-white/20 text-white font-label-md text-label-md flex items-center gap-1 transition-all cursor-pointer" type="button">
+              <span class="material-symbols-outlined text-[16px]">login</span>
+              <span>Sign In</span>
+            </button>
+            <!-- When Logged In: Owner Profile Pill -->
+            <button id="btn-header-profile" class="hidden h-9 px-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-surface-container-highest text-on-surface font-label-md text-label-md flex items-center gap-2 transition-all cursor-pointer" type="button">
+              <div id="header-avatar-initials" class="w-6 h-6 rounded-full bg-indigo-600 text-white text-[11px] font-semibold flex items-center justify-center">O</div>
+              <span id="header-owner-name" class="font-medium max-w-[90px] truncate hidden sm:inline">Owner</span>
+              <span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span>
+            </button>
+            <!-- Dropdown Menu -->
+            <div id="header-user-dropdown" class="hidden absolute right-0 mt-2 w-48 rounded-xl bg-surface-container border border-surface-container-highest shadow-2xl py-1 z-50 text-body-sm">
+              <div class="px-3 py-2 border-b border-surface-container-highest/60 flex flex-col">
+                <span id="dropdown-user-name" class="font-semibold text-on-surface truncate">Shop Owner</span>
+                <span id="dropdown-user-email" class="text-[11px] text-on-surface-variant truncate">owner@example.com</span>
+              </div>
+              <button id="dropdown-btn-dashboard" class="w-full px-3 py-2 text-left hover:bg-surface-container-high text-on-surface flex items-center gap-2 cursor-pointer transition-colors" type="button">
+                <span class="material-symbols-outlined text-[16px]">dashboard</span>
+                <span>Shop Dashboard</span>
+              </button>
+              <button id="dropdown-btn-khata" class="w-full px-3 py-2 text-left hover:bg-surface-container-high text-on-surface flex items-center gap-2 cursor-pointer transition-colors" type="button">
+                <span class="material-symbols-outlined text-[16px]">menu_book</span>
+                <span>Voice Ledger</span>
+              </button>
+              <button id="dropdown-btn-admin" class="hidden w-full px-3 py-2 text-left hover:bg-surface-container-high text-amber-300 flex items-center gap-2 cursor-pointer transition-colors" type="button">
+                <span class="material-symbols-outlined text-[16px]">shield_person</span>
+                <span>Admin Console</span>
+              </button>
+              <div class="border-t border-surface-container-highest/60 my-1"></div>
+              <button id="dropdown-btn-logout" class="w-full px-3 py-2 text-left hover:bg-red-500/10 text-red-400 flex items-center gap-2 cursor-pointer transition-colors" type="button">
+                <span class="material-symbols-outlined text-[16px]">logout</span>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </header>
 
-    <!-- Error Notification Banner with Retry Button -->
+    <!-- Error & Info Notification Banner -->
     <div id="error-banner" class="hidden fixed top-20 inset-x-0 max-w-4xl mx-auto z-50 px-4 sm:px-6">
-      <div class="bg-error-container border border-error text-on-error-container p-space-sm rounded-lg flex items-center justify-between text-body-sm gap-2">
+      <div class="bg-error-container border border-error text-on-error-container p-space-sm rounded-lg flex items-center justify-between text-body-sm gap-2 shadow-lg">
         <div class="flex items-center gap-space-xs min-w-0 flex-1">
           <span class="material-symbols-outlined text-[18px] shrink-0 text-error">error</span>
           <span id="error-message" class="text-body-sm leading-tight break-words">An error occurred</span>
@@ -218,10 +265,10 @@
     </div>
 
     <!-- MAIN VIEWS CONTAINER -->
-    <main class="flex flex-col relative w-full pt-14 pb-safe bg-surface flex-1">
+    <main class="flex flex-col relative w-full pt-16 pb-safe bg-surface flex-1">
 
       <!-- ================================================================ -->
-      <!-- VIEW 1: HOME DASHBOARD                                            -->
+      <!-- VIEW 1: HOME (VOICE KHATA LEDGER)                                -->
       <!-- ================================================================ -->
       <div id="view-home" class="flex flex-col w-full px-margin pb-space-xl">
 
@@ -551,10 +598,1039 @@
 
       </div>
 
+      <!-- ================================================================ -->
+      <!-- VIEW 4: AUTHENTICATION (LOGIN & REGISTRATION & SAVED ACCOUNTS)   -->
+      <!-- ================================================================ -->
+      <div id="view-auth" class="hidden flex flex-col w-full max-w-md mx-auto px-4 py-8">
+        
+        <!-- Brand Header -->
+        <div class="text-center mb-6">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-600/30">
+            <span class="material-symbols-outlined text-[26px]">storefront</span>
+          </div>
+          <h2 class="text-2xl font-bold tracking-tight text-white" id="auth-main-heading">Shop Owner Portal</h2>
+          <p class="text-body-sm text-on-surface-variant mt-1">Manage your shop, customers, voice ledger & map location</p>
+        </div>
+
+        <!-- Auth Tabs: Sign In / Create Account -->
+        <div class="flex rounded-xl bg-surface-container-low p-1 border border-surface-container-high mb-6">
+          <button id="tab-btn-login" type="button" class="flex-1 py-2 text-center rounded-lg font-medium text-body-sm transition-all bg-surface-container text-white shadow-sm cursor-pointer">
+            Sign In
+          </button>
+          <button id="tab-btn-register" type="button" class="flex-1 py-2 text-center rounded-lg font-medium text-body-sm transition-all text-on-surface-variant hover:text-white cursor-pointer">
+            Create Account
+          </button>
+        </div>
+
+        <!-- TAB A: LOGIN CARD -->
+        <div id="card-auth-login" class="flex flex-col gap-4">
+
+          <!-- Saved Accounts Carousel/List -->
+          <div id="saved-accounts-section" class="hidden flex flex-col gap-2 p-3 rounded-xl bg-surface-container-low border border-surface-container-high">
+            <div class="flex items-center justify-between text-label-sm text-on-surface-variant">
+              <span class="uppercase tracking-wider font-semibold">Saved Accounts on this device</span>
+              <span class="material-symbols-outlined text-[14px]">devices</span>
+            </div>
+            <div id="saved-accounts-list" class="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Login Form -->
+          <form id="form-login" class="flex flex-col gap-3.5" onsubmit="event.preventDefault();">
+            <div class="flex flex-col gap-1.5">
+              <label for="login-identifier" class="text-on-surface-variant font-label-md text-label-md">Email or Mobile Number</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">account_circle</span>
+                <input id="login-identifier" type="text" autocomplete="username" placeholder="name@example.com or +919876543210" required class="w-full h-11 pl-10 pr-3 rounded-lg bg-surface-container-low border border-surface-container-high text-on-surface focus:border-indigo-500 focus:outline-none transition-colors" />
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <div class="flex justify-between items-center">
+                <label for="login-password" class="text-on-surface-variant font-label-md text-label-md">Password</label>
+                <button type="button" id="btn-forgot-password-trigger" class="text-[11px] text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer">Forgot password?</button>
+              </div>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">lock</span>
+                <input id="login-password" type="password" autocomplete="current-password" placeholder="Enter your password" required class="w-full h-11 pl-10 pr-10 rounded-lg bg-surface-container-low border border-surface-container-high text-on-surface focus:border-indigo-500 focus:outline-none transition-colors" />
+                <button type="button" id="btn-toggle-login-pwd" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface cursor-pointer">
+                  <span class="material-symbols-outlined text-[18px]" id="icon-login-eye">visibility</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-body-sm pt-1">
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input id="login-remember-me" type="checkbox" checked class="w-4 h-4 rounded border-outline-variant bg-surface-container text-indigo-600 focus:ring-0 focus:ring-offset-0" />
+                <span class="text-on-surface-variant text-[12px]">Remember me</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input id="login-save-account" type="checkbox" checked class="w-4 h-4 rounded border-outline-variant bg-surface-container text-indigo-600 focus:ring-0 focus:ring-offset-0" />
+                <span class="text-on-surface-variant text-[12px]">Save account details</span>
+              </label>
+            </div>
+
+            <button id="btn-submit-login" type="submit" class="mt-2 w-full h-11 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-body-md flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 active:scale-[0.99] transition-all cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">login</span>
+              <span>Sign In to Shop</span>
+            </button>
+          </form>
+
+          <!-- Switch to Admin Login -->
+          <div class="mt-4 pt-4 border-t border-surface-container-high text-center">
+            <button id="btn-switch-admin-login" type="button" class="text-[12px] text-amber-400/80 hover:text-amber-300 flex items-center justify-center gap-1.5 mx-auto transition-colors cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+              <span>System Administrator Login</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- TAB B: REGISTRATION CARD -->
+        <div id="card-auth-register" class="hidden flex flex-col gap-4">
+          <form id="form-register" class="flex flex-col gap-3" onsubmit="event.preventDefault();">
+
+            <div class="flex flex-col gap-1">
+              <label for="reg-fullname" class="text-on-surface-variant font-label-md text-label-md">Full Name *</label>
+              <input id="reg-fullname" type="text" placeholder="e.g. Ramesh Kumar" required class="w-full h-10 px-3 rounded-lg bg-surface-container-low border border-surface-container-high text-on-surface focus:border-indigo-500 focus:outline-none transition-colors" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="reg-email" class="text-on-surface-variant font-label-md text-label-md">Email Address *</label>
+              <input id="reg-email" type="email" placeholder="ramesh@example.com" required class="w-full h-10 px-3 rounded-lg bg-surface-container-low border border-surface-container-high text-on-surface focus:border-indigo-500 focus:outline-none transition-colors" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="reg-mobile" class="text-on-surface-variant font-label-md text-label-md">Mobile Number (with Country Code) *</label>
+              <input id="reg-mobile" type="tel" placeholder="+919876543210" value="+91" required class="w-full h-10 px-3 rounded-lg bg-surface-container-low border border-surface-container-high text-on-surface focus:border-indigo-500 focus:outline-none transition-colors" />
+            </div>
+
+            <!-- Password with Show/Hide & Strength Meter -->
+            <div class="flex flex-col gap-1">
+              <label for="reg-password" class="text-on-surface-variant font-label-md text-label-md">Password *</label>
+              <div class="relative">
+                <input id="reg-password" type="password" autocomplete="new-password" placeholder="Min 8 chars (letters, digits, symbol)" required class="w-full h-10 pl-3 pr-10 rounded-lg bg-surface-container-low border border-surface-container-high text-on-surface focus:border-indigo-500 focus:outline-none transition-colors" />
+                <button type="button" id="btn-toggle-reg-pwd" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface cursor-pointer">
+                  <span class="material-symbols-outlined text-[18px]" id="icon-reg-eye">visibility</span>
+                </button>
+              </div>
+
+              <!-- Password Strength Progress Bar -->
+              <div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden mt-1.5">
+                <div id="pwd-strength-bar" class="h-full w-0 transition-all duration-300 rounded-full bg-red-500"></div>
+              </div>
+              <div class="flex justify-between items-center text-[10px] text-on-surface-variant/80 mt-0.5">
+                <span id="pwd-strength-text">Strength: Enter password</span>
+                <span class="text-indigo-400">8+ chars, upper, lower, digit, symbol</span>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="reg-confirm-password" class="text-on-surface-variant font-label-md text-label-md">Confirm Password *</label>
+              <input id="reg-confirm-password" type="password" autocomplete="new-password" placeholder="Re-enter password" required class="w-full h-10 px-3 rounded-lg bg-surface-container-low border border-surface-container-high text-on-surface focus:border-indigo-500 focus:outline-none transition-colors" />
+            </div>
+
+            <div class="flex items-start gap-2 pt-1">
+              <input id="reg-terms" type="checkbox" required class="w-4 h-4 mt-0.5 rounded border-outline-variant bg-surface-container text-indigo-600 focus:ring-0" />
+              <label for="reg-terms" class="text-[12px] text-on-surface-variant leading-tight cursor-pointer">
+                I accept the <a href="#" class="text-indigo-400 hover:underline">Terms of Service</a> and <a href="#" class="text-indigo-400 hover:underline">Privacy Policy</a>
+              </label>
+            </div>
+
+            <button id="btn-submit-register" type="submit" class="mt-3 w-full h-11 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium text-body-md flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 active:scale-[0.99] transition-all cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">how_to_reg</span>
+              <span>Register & Continue</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- TAB C: FORGOT PASSWORD MODAL/CARD -->
+        <div id="card-auth-forgot" class="hidden flex flex-col gap-4 p-4 rounded-xl bg-surface-container-low border border-surface-container-high">
+          <div class="flex items-center justify-between pb-2 border-b border-surface-container-high">
+            <h3 class="font-headline-sm text-headline-sm text-white">Reset Account Password</h3>
+            <button id="btn-close-forgot-card" type="button" class="text-on-surface-variant hover:text-white cursor-pointer">✕</button>
+          </div>
+
+          <!-- Step 1: Identifier -->
+          <div id="forgot-step-1" class="flex flex-col gap-3">
+            <p class="text-[12px] text-on-surface-variant">Enter your registered email address or mobile number. We will send a secure 6-digit OTP code.</p>
+            <input id="forgot-identifier" type="text" placeholder="Registered email or phone (+91...)" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-high text-on-surface focus:border-indigo-500 focus:outline-none" />
+            <button id="btn-send-reset-otp" type="button" class="w-full h-10 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium flex items-center justify-center gap-1.5 cursor-pointer">
+              <span>Send Password Reset Code</span>
+            </button>
+          </div>
+
+          <!-- Step 2: OTP + New Password -->
+          <div id="forgot-step-2" class="hidden flex flex-col gap-3">
+            <p class="text-[12px] text-green-400" id="forgot-otp-notice">OTP sent! Please check your email or phone.</p>
+            <input id="forgot-otp-input" type="text" maxlength="6" placeholder="Enter 6-digit OTP" class="w-full h-10 px-3 text-center tracking-widest font-mono text-lg rounded-lg bg-surface-container border border-surface-container-high text-on-surface focus:border-indigo-500 focus:outline-none" />
+            <input id="forgot-new-pwd" type="password" placeholder="New Password (8+ chars)" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-high text-on-surface focus:border-indigo-500 focus:outline-none" />
+            <input id="forgot-confirm-pwd" type="password" placeholder="Confirm New Password" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-high text-on-surface focus:border-indigo-500 focus:outline-none" />
+            <button id="btn-submit-password-reset" type="button" class="w-full h-10 rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium flex items-center justify-center gap-1.5 cursor-pointer">
+              <span>Update Password & Sign In</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- VIEW 5: OTP VERIFICATION                                         -->
+      <!-- ================================================================ -->
+      <div id="view-otp" class="hidden flex flex-col w-full max-w-md mx-auto px-4 py-8">
+        
+        <div class="text-center mb-6">
+          <div class="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center mx-auto mb-3">
+            <span class="material-symbols-outlined text-[28px]">mark_email_read</span>
+          </div>
+          <h2 class="text-2xl font-bold tracking-tight text-white">Verify Your Account</h2>
+          <p class="text-body-sm text-on-surface-variant mt-1" id="otp-destination-display">Enter the 6-digit code sent to your registered address</p>
+        </div>
+
+        <!-- Dev Mode Mock OTP Banner (If active) -->
+        <div id="dev-otp-banner" class="hidden mb-4 p-3 rounded-xl bg-indigo-950/60 border border-indigo-500/40 text-indigo-300 text-center text-[12px] flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-[16px]">developer_mode</span>
+          <span>Dev Mode Auto-OTP: <strong id="dev-otp-code" class="text-white font-mono text-sm">123456</strong></span>
+          <button id="btn-copy-dev-otp" class="ml-2 px-2 py-0.5 rounded bg-indigo-600/40 hover:bg-indigo-600/60 text-white text-[10px] cursor-pointer" type="button">Copy</button>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-surface-container-low border border-surface-container-high shadow-xl flex flex-col gap-5">
+          
+          <!-- Method Selection Tabs -->
+          <div class="grid grid-cols-2 gap-2 p-1 rounded-lg bg-surface-container border border-surface-container-highest">
+            <button id="otp-method-email" type="button" class="py-1.5 rounded-md text-[12px] font-medium transition-colors bg-indigo-600 text-white cursor-pointer">
+              Email OTP
+            </button>
+            <button id="otp-method-phone" type="button" class="py-1.5 rounded-md text-[12px] font-medium transition-colors text-on-surface-variant hover:text-white cursor-pointer">
+              Phone SMS OTP
+            </button>
+          </div>
+
+          <!-- 6-Digit OTP Inputs -->
+          <div class="flex justify-center gap-2 my-2" id="otp-digits-container">
+            <input type="text" maxlength="1" inputmode="numeric" class="otp-input w-11 h-13 text-center text-xl font-mono font-bold rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" data-index="0" />
+            <input type="text" maxlength="1" inputmode="numeric" class="otp-input w-11 h-13 text-center text-xl font-mono font-bold rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" data-index="1" />
+            <input type="text" maxlength="1" inputmode="numeric" class="otp-input w-11 h-13 text-center text-xl font-mono font-bold rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" data-index="2" />
+            <input type="text" maxlength="1" inputmode="numeric" class="otp-input w-11 h-13 text-center text-xl font-mono font-bold rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" data-index="3" />
+            <input type="text" maxlength="1" inputmode="numeric" class="otp-input w-11 h-13 text-center text-xl font-mono font-bold rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" data-index="4" />
+            <input type="text" maxlength="1" inputmode="numeric" class="otp-input w-11 h-13 text-center text-xl font-mono font-bold rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" data-index="5" />
+          </div>
+
+          <!-- Expiry & Resend Cooldown Display -->
+          <div class="flex items-center justify-between text-[12px] text-on-surface-variant px-1">
+            <span id="otp-expires-text" class="flex items-center gap-1 font-mono">
+              <span class="material-symbols-outlined text-[14px]">timer</span>
+              <span>Expires in 05:00</span>
+            </span>
+            <button id="btn-resend-otp" type="button" disabled class="text-indigo-400 font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:underline transition-all cursor-pointer">
+              Resend OTP (<span id="resend-cooldown-count">45</span>s)
+            </button>
+          </div>
+
+          <!-- Verification Action -->
+          <button id="btn-submit-verify-otp" type="button" class="w-full h-11 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-body-md flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 active:scale-[0.99] transition-all cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">verified_user</span>
+            <span>Verify & Continue</span>
+          </button>
+
+          <button id="btn-cancel-otp" type="button" class="w-full text-center text-[12px] text-on-surface-variant hover:text-white transition-colors cursor-pointer">
+            Change account or sign out
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- VIEW 6: 4-STEP SHOP OWNER REGISTRATION WIZARD                    -->
+      <!-- ================================================================ -->
+      <div id="view-wizard" class="hidden flex flex-col w-full max-w-2xl mx-auto px-4 py-6">
+
+        <!-- Stepper Progress Header -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-3 text-label-md font-semibold text-on-surface-variant">
+            <span id="wizard-step-label">Step 1 of 4: Owner Verification</span>
+            <span id="wizard-progress-percent" class="text-indigo-400">25%</span>
+          </div>
+          <!-- Stepper Track -->
+          <div class="grid grid-cols-4 gap-2">
+            <div id="step-pill-1" class="h-2 rounded-full bg-indigo-600 transition-all"></div>
+            <div id="step-pill-2" class="h-2 rounded-full bg-surface-container-high transition-all"></div>
+            <div id="step-pill-3" class="h-2 rounded-full bg-surface-container-high transition-all"></div>
+            <div id="step-pill-4" class="h-2 rounded-full bg-surface-container-high transition-all"></div>
+          </div>
+          <!-- Step Labels -->
+          <div class="grid grid-cols-4 gap-1 text-[11px] text-center mt-2 text-on-surface-variant/80 font-medium">
+            <span class="text-white" id="step-name-1">01 Owner</span>
+            <span id="step-name-2">02 Shop</span>
+            <span id="step-name-3">03 Location</span>
+            <span id="step-name-4">04 Review</span>
+          </div>
+        </div>
+
+        <!-- WIZARD STEP 1: OWNER DETAILS -->
+        <div id="wizard-pane-1" class="flex flex-col gap-4 p-5 rounded-2xl bg-surface-container-low border border-surface-container-high shadow-xl">
+          <div class="border-b border-surface-container-high pb-3">
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <span class="material-symbols-outlined text-indigo-400">person</span>
+              <span>Shop Owner Details</span>
+            </h3>
+            <p class="text-body-sm text-on-surface-variant mt-1">Confirmed profile data associated with your Voice Khata account.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1">
+              <label class="text-label-md text-on-surface-variant font-medium">Owner Full Name</label>
+              <input id="wz-owner-name" type="text" readonly class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white/90" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-label-md text-on-surface-variant font-medium">Registered Mobile</label>
+              <input id="wz-owner-mobile" type="text" readonly class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white/90 font-mono" />
+            </div>
+            <div class="flex flex-col gap-1 sm:col-span-2">
+              <label class="text-label-md text-on-surface-variant font-medium">Registered Email</label>
+              <input id="wz-owner-email" type="email" readonly class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white/90 font-mono" />
+            </div>
+          </div>
+
+          <!-- Verification Status Indicators -->
+          <div class="flex items-center gap-4 p-3 rounded-xl bg-surface-container border border-surface-container-highest">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-green-400 text-[18px]">verified</span>
+              <span class="text-[12px] text-white">Email: <strong id="wz-status-email" class="text-green-400">Verified</strong></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-indigo-400 text-[18px]">phone_iphone</span>
+              <span class="text-[12px] text-white">Phone: <strong id="wz-status-phone" class="text-indigo-400">Active</strong></span>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button id="btn-wz-next-1" type="button" class="px-6 h-10 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium flex items-center gap-2 cursor-pointer transition-all">
+              <span>Next: Shop Information</span>
+              <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- WIZARD STEP 2: SHOP INFORMATION -->
+        <div id="wizard-pane-2" class="hidden flex flex-col gap-4 p-5 rounded-2xl bg-surface-container-low border border-surface-container-high shadow-xl">
+          <div class="border-b border-surface-container-high pb-3">
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <span class="material-symbols-outlined text-indigo-400">storefront</span>
+              <span>Shop Information</span>
+            </h3>
+            <p class="text-body-sm text-on-surface-variant mt-1">Tell us about your business and operating schedule.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div class="flex flex-col gap-1 sm:col-span-2">
+              <label for="wz-shop-name" class="text-label-md text-on-surface-variant font-medium">Shop Name *</label>
+              <input id="wz-shop-name" type="text" placeholder="e.g. Ramesh Super Market" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="wz-shop-category" class="text-label-md text-on-surface-variant font-medium">Category *</label>
+              <select id="wz-shop-category" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none cursor-pointer">
+                <option value="Grocery Store">Grocery Store (किराना)</option>
+                <option value="Medical Store">Medical Store (दवाखाना)</option>
+                <option value="Clothing Store">Clothing Store (कपड़ा दुकान)</option>
+                <option value="Electronics Store">Electronics Store</option>
+                <option value="Restaurant">Restaurant / Cafe</option>
+                <option value="Bakery">Bakery & Sweets</option>
+                <option value="Stationery Shop">Stationery Shop</option>
+                <option value="Mobile Shop">Mobile & Accessories</option>
+                <option value="Hardware Store">Hardware & Electrical</option>
+                <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
+                <option value="Other">Other (कस्टम)</option>
+              </select>
+            </div>
+
+            <div id="wz-custom-category-box" class="hidden flex flex-col gap-1">
+              <label for="wz-custom-category" class="text-label-md text-on-surface-variant font-medium">Custom Category *</label>
+              <input id="wz-custom-category" type="text" placeholder="Specify category" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+
+            <div class="flex flex-col gap-1 sm:col-span-2">
+              <label for="wz-shop-desc" class="text-label-md text-on-surface-variant font-medium">Shop Description</label>
+              <textarea id="wz-shop-desc" rows="2" placeholder="Brief description of products sold or services offered..." class="w-full p-2.5 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none resize-none"></textarea>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="wz-shop-mobile" class="text-label-md text-on-surface-variant font-medium">Shop Primary Mobile *</label>
+              <input id="wz-shop-mobile" type="tel" placeholder="+919876543210" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none font-mono" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="wz-shop-alt-phone" class="text-label-md text-on-surface-variant font-medium">Alternative Contact (Optional)</label>
+              <input id="wz-shop-alt-phone" type="tel" placeholder="e.g. 022-12345678" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none font-mono" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="wz-opening-time" class="text-label-md text-on-surface-variant font-medium">Opening Time</label>
+              <input id="wz-opening-time" type="time" value="09:00" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="wz-closing-time" class="text-label-md text-on-surface-variant font-medium">Closing Time</label>
+              <input id="wz-closing-time" type="time" value="21:00" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+
+            <div class="flex flex-col gap-1 sm:col-span-2">
+              <label for="wz-weekly-closing" class="text-label-md text-on-surface-variant font-medium">Weekly Closing Day</label>
+              <select id="wz-weekly-closing" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none cursor-pointer">
+                <option value="None">None (Open 7 days)</option>
+                <option value="Sunday">Sunday</option>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex justify-between pt-2">
+            <button id="btn-wz-back-2" type="button" class="px-5 h-10 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-medium cursor-pointer">
+              ← Back
+            </button>
+            <button id="btn-wz-next-2" type="button" class="px-6 h-10 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium flex items-center gap-2 cursor-pointer transition-all">
+              <span>Next: Shop Location & Maps</span>
+              <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- WIZARD STEP 3: SHOP ADDRESS AND GOOGLE MAPS -->
+        <div id="wizard-pane-3" class="hidden flex flex-col gap-4 p-5 rounded-2xl bg-surface-container-low border border-surface-container-high shadow-xl">
+          <div class="border-b border-surface-container-high pb-3">
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <span class="material-symbols-outlined text-indigo-400">pin_drop</span>
+              <span>Shop Address & Google Maps Location</span>
+            </h3>
+            <p class="text-body-sm text-on-surface-variant mt-1">Pin your exact shop location so customers can navigate to you easily.</p>
+          </div>
+
+          <!-- Places Autocomplete Search & Geolocation Button -->
+          <div class="flex flex-col sm:flex-row gap-2">
+            <div class="relative flex-1">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+              <input id="wz-places-search" type="text" placeholder="Search address, landmark or area..." class="w-full h-10 pl-10 pr-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+            <button id="btn-wz-current-location" type="button" class="h-10 px-3 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-[12px] font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0">
+              <span class="material-symbols-outlined text-[18px]">my_location</span>
+              <span>Use Current Location</span>
+            </button>
+          </div>
+
+          <!-- Interactive Map Container -->
+          <div class="relative w-full h-[280px] rounded-xl overflow-hidden border border-surface-container-highest shadow-inner">
+            <div id="wizard-map-canvas" class="w-full h-full z-10"></div>
+            <!-- Coordinates Pill Overlay -->
+            <div class="absolute bottom-2 left-2 z-20 px-2.5 py-1 rounded-md bg-surface-container/90 backdrop-blur border border-white/10 text-[11px] font-mono text-white flex items-center gap-2 shadow">
+              <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+              <span>Lat: <strong id="wz-coord-lat">28.6139</strong>, Lng: <strong id="wz-coord-lng">77.2090</strong></span>
+            </div>
+          </div>
+
+          <!-- Address Fields -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="flex flex-col gap-1 sm:col-span-2">
+              <label for="wz-address" class="text-label-md text-on-surface-variant font-medium">Street / Shop Address *</label>
+              <input id="wz-address" type="text" placeholder="Shop No. 4, Main Market Road" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="wz-landmark" class="text-label-md text-on-surface-variant font-medium">Landmark (Optional)</label>
+              <input id="wz-landmark" type="text" placeholder="Near Metro Station / Temple" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="wz-city" class="text-label-md text-on-surface-variant font-medium">City *</label>
+              <input id="wz-city" type="text" placeholder="e.g. New Delhi" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="wz-state" class="text-label-md text-on-surface-variant font-medium">State *</label>
+              <input id="wz-state" type="text" placeholder="e.g. Delhi" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="wz-pincode" class="text-label-md text-on-surface-variant font-medium">Pincode *</label>
+              <input id="wz-pincode" type="text" placeholder="e.g. 110001" maxlength="10" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none font-mono" />
+            </div>
+          </div>
+
+          <div class="flex justify-between pt-2">
+            <button id="btn-wz-back-3" type="button" class="px-5 h-10 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-medium cursor-pointer">
+              ← Back
+            </button>
+            <button id="btn-wz-next-3" type="button" class="px-6 h-10 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium flex items-center gap-2 cursor-pointer transition-all">
+              <span>Next: Review & Submit</span>
+              <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- WIZARD STEP 4: REVIEW & SUBMIT -->
+        <div id="wizard-pane-4" class="hidden flex flex-col gap-4 p-5 rounded-2xl bg-surface-container-low border border-surface-container-high shadow-xl">
+          <div class="border-b border-surface-container-high pb-3">
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <span class="material-symbols-outlined text-green-400">check_circle</span>
+              <span>Review & Confirm Registration</span>
+            </h3>
+            <p class="text-body-sm text-on-surface-variant mt-1">Please verify your shop profile details before launching.</p>
+          </div>
+
+          <!-- Summary Grid -->
+          <div class="flex flex-col gap-3 p-4 rounded-xl bg-surface-container border border-surface-container-highest divide-y divide-surface-container-highest/60 text-body-sm">
+            
+            <div class="pb-3 flex flex-col gap-1">
+              <span class="text-label-sm font-semibold uppercase tracking-wider text-indigo-400">Shop Identity</span>
+              <div class="flex justify-between items-baseline">
+                <span id="rev-shop-name" class="text-lg font-bold text-white">Ramesh Super Market</span>
+                <span id="rev-shop-category" class="px-2.5 py-0.5 rounded-full bg-indigo-950 text-indigo-300 text-label-sm border border-indigo-800 font-medium">Grocery Store</span>
+              </div>
+              <p id="rev-shop-desc" class="text-on-surface-variant text-[12px] italic mt-0.5">Description...</p>
+            </div>
+
+            <div class="py-3 grid grid-cols-2 gap-2">
+              <div>
+                <span class="text-[11px] text-on-surface-variant font-medium">Owner</span>
+                <p id="rev-owner-name" class="font-medium text-white">Ramesh Kumar</p>
+              </div>
+              <div>
+                <span class="text-[11px] text-on-surface-variant font-medium">Phone</span>
+                <p id="rev-shop-phone" class="font-mono text-white">+919876543210</p>
+              </div>
+              <div>
+                <span class="text-[11px] text-on-surface-variant font-medium">Business Hours</span>
+                <p id="rev-timings" class="font-medium text-white">09:00 - 21:00</p>
+              </div>
+              <div>
+                <span class="text-[11px] text-on-surface-variant font-medium">Weekly Off</span>
+                <p id="rev-weekly-off" class="font-medium text-white">None</p>
+              </div>
+            </div>
+
+            <div class="pt-3 flex flex-col gap-1">
+              <span class="text-label-sm font-semibold uppercase tracking-wider text-indigo-400">Location & Google Maps</span>
+              <p id="rev-address" class="text-white font-medium">Shop 4, Main Market, New Delhi, Delhi 110001</p>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="material-symbols-outlined text-[16px] text-green-400">pin_drop</span>
+                <span class="text-[11px] text-on-surface-variant font-mono" id="rev-coords">Coordinates: 28.6139, 77.2090</span>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="flex justify-between pt-2">
+            <button id="btn-wz-back-4" type="button" class="px-5 h-10 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-medium cursor-pointer">
+              ← Edit Details
+            </button>
+            <button id="btn-wz-submit-final" type="button" class="px-7 h-11 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold flex items-center gap-2 shadow-lg shadow-green-600/25 active:scale-[0.99] transition-all cursor-pointer">
+              <span class="material-symbols-outlined text-[20px]">store</span>
+              <span>Complete & Launch Shop</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- VIEW 7: SHOP OWNER DASHBOARD (5-TAB COMPLETE MANAGEMENT)         -->
+      <!-- ================================================================ -->
+      <div id="view-dashboard" class="hidden flex flex-col w-full max-w-4xl mx-auto px-margin pb-20">
+
+        <!-- Shop Profile Header Card -->
+        <section class="mt-4 p-5 rounded-2xl bg-gradient-to-br from-surface-container to-surface-container-low border border-surface-container-high shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/30">
+              <span class="material-symbols-outlined text-[30px]">store</span>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 id="dash-header-shop-name" class="text-xl sm:text-2xl font-bold text-white truncate">My Shop</h2>
+                <span id="dash-header-category-badge" class="px-2.5 py-0.5 rounded-full bg-indigo-950/80 text-indigo-300 text-[11px] font-medium border border-indigo-500/30">Grocery</span>
+                <span id="dash-header-status-badge" class="px-2 py-0.5 rounded-full bg-green-950/80 text-green-400 text-[10px] font-semibold border border-green-500/30">Verified</span>
+              </div>
+              <div class="flex items-center gap-2 text-[12px] text-on-surface-variant mt-1 flex-wrap">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px]">person</span>
+                  <span id="dash-header-owner-name">Owner Name</span>
+                </span>
+                <span>•</span>
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px]">schedule</span>
+                  <span id="dash-header-hours">09:00 - 21:00</span>
+                </span>
+                <span>•</span>
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px]">location_on</span>
+                  <span id="dash-header-city">City</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Navigation Actions -->
+          <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <button id="dash-btn-open-khata" type="button" class="flex-1 sm:flex-initial h-9 px-3.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-[12px] flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer transition-all">
+              <span class="material-symbols-outlined text-[16px]">mic</span>
+              <span>Voice Khata</span>
+            </button>
+            <a id="dash-link-google-maps" href="#" target="_blank" rel="noopener noreferrer" class="h-9 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high border border-surface-container-highest text-indigo-300 text-[12px] font-medium flex items-center justify-center gap-1 transition-colors">
+              <span class="material-symbols-outlined text-[16px]">map</span>
+              <span>Maps</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Dashboard Navigation Tabs -->
+        <div class="flex items-center gap-1 overflow-x-auto py-3 my-2 border-b border-surface-container-high text-body-sm select-none">
+          <button id="dash-tab-overview" type="button" class="dash-tab-btn px-3.5 py-1.5 rounded-lg font-medium transition-all bg-indigo-600 text-white cursor-pointer flex items-center gap-1.5 shrink-0">
+            <span class="material-symbols-outlined text-[16px]">grid_view</span>
+            <span>Overview</span>
+          </button>
+          <button id="dash-tab-details" type="button" class="dash-tab-btn px-3.5 py-1.5 rounded-lg font-medium transition-all text-on-surface-variant hover:text-white cursor-pointer flex items-center gap-1.5 shrink-0">
+            <span class="material-symbols-outlined text-[16px]">edit_note</span>
+            <span>Shop Details</span>
+          </button>
+          <button id="dash-tab-location" type="button" class="dash-tab-btn px-3.5 py-1.5 rounded-lg font-medium transition-all text-on-surface-variant hover:text-white cursor-pointer flex items-center gap-1.5 shrink-0">
+            <span class="material-symbols-outlined text-[16px]">pin_drop</span>
+            <span>Location & Map</span>
+          </button>
+          <button id="dash-tab-security" type="button" class="dash-tab-btn px-3.5 py-1.5 rounded-lg font-medium transition-all text-on-surface-variant hover:text-white cursor-pointer flex items-center gap-1.5 shrink-0">
+            <span class="material-symbols-outlined text-[16px]">security</span>
+            <span>Account & Security</span>
+          </button>
+        </div>
+
+        <!-- TAB 1 CONTENT: OVERVIEW -->
+        <div id="dash-pane-overview" class="flex flex-col gap-4 mt-2">
+          
+          <!-- Key Metrics -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3.5 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col">
+              <span class="text-[11px] font-medium uppercase tracking-wider text-red-400">Total Udhaar</span>
+              <span id="dash-metric-udhaar" class="text-2xl font-bold font-mono text-red-400 mt-1">₹0</span>
+              <span class="text-[10px] text-on-surface-variant mt-0.5">Pending collection</span>
+            </div>
+            <div class="p-3.5 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col">
+              <span class="text-[11px] font-medium uppercase tracking-wider text-indigo-400">Total Customers</span>
+              <span id="dash-metric-customers" class="text-2xl font-bold font-mono text-white mt-1">0</span>
+              <span class="text-[10px] text-on-surface-variant mt-0.5">Active accounts</span>
+            </div>
+            <div class="p-3.5 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col">
+              <span class="text-[11px] font-medium uppercase tracking-wider text-green-400">Shop Status</span>
+              <span id="dash-metric-status" class="text-lg font-bold text-green-400 mt-1">Active</span>
+              <span class="text-[10px] text-on-surface-variant mt-0.5">Operational</span>
+            </div>
+            <div class="p-3.5 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col">
+              <span class="text-[11px] font-medium uppercase tracking-wider text-amber-400">Weekly Off</span>
+              <span id="dash-metric-offday" class="text-lg font-bold text-white mt-1">None</span>
+              <span class="text-[10px] text-on-surface-variant mt-0.5">7 days open</span>
+            </div>
+          </div>
+
+          <!-- Location & Google Maps Card -->
+          <div class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-indigo-400">location_on</span>
+                <h3 class="font-semibold text-white">Shop Address & Directions</h3>
+              </div>
+              <a id="dash-overview-maps-btn" href="#" target="_blank" rel="noopener noreferrer" class="text-[12px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium">
+                <span>Open in Google Maps</span>
+                <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+              </a>
+            </div>
+            <p id="dash-overview-address" class="text-body-sm text-on-surface">Address loading...</p>
+            <!-- Map preview canvas -->
+            <div class="w-full h-48 rounded-lg overflow-hidden border border-surface-container-high relative">
+              <div id="dash-overview-map-canvas" class="w-full h-full"></div>
+            </div>
+          </div>
+
+          <!-- Quick Actions Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button id="dash-quick-new-entry" type="button" class="p-4 rounded-xl bg-surface-container-low hover:bg-surface-container border border-surface-container-high text-left flex items-center gap-3 transition-colors cursor-pointer">
+              <div class="w-10 h-10 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+                <span class="material-symbols-outlined text-[22px]">add</span>
+              </div>
+              <div>
+                <h4 class="font-medium text-white">Record Transaction</h4>
+                <p class="text-[11px] text-on-surface-variant">Add cash or udhaar entry via voice or form</p>
+              </div>
+            </button>
+            <button id="dash-quick-edit-profile" type="button" class="p-4 rounded-xl bg-surface-container-low hover:bg-surface-container border border-surface-container-high text-left flex items-center gap-3 transition-colors cursor-pointer">
+              <div class="w-10 h-10 rounded-lg bg-purple-600/20 text-purple-400 flex items-center justify-center">
+                <span class="material-symbols-outlined text-[22px]">store</span>
+              </div>
+              <div>
+                <h4 class="font-medium text-white">Update Business Details</h4>
+                <p class="text-[11px] text-on-surface-variant">Edit shop hours, category & address</p>
+              </div>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- TAB 2 CONTENT: SHOP DETAILS EDIT -->
+        <div id="dash-pane-details" class="hidden flex flex-col gap-4 mt-2">
+          <form id="form-edit-shop-details" class="flex flex-col gap-4 p-5 rounded-xl bg-surface-container-low border border-surface-container-high" onsubmit="event.preventDefault();">
+            <h3 class="font-bold text-white text-lg flex items-center gap-2">
+              <span class="material-symbols-outlined text-indigo-400">edit</span>
+              <span>Edit Shop Profile</span>
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div class="flex flex-col gap-1 sm:col-span-2">
+                <label for="edit-shop-name" class="text-label-md text-on-surface-variant font-medium">Shop Name *</label>
+                <input id="edit-shop-name" type="text" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label for="edit-shop-category" class="text-label-md text-on-surface-variant font-medium">Category *</label>
+                <select id="edit-shop-category" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none cursor-pointer">
+                  <option value="Grocery Store">Grocery Store</option>
+                  <option value="Medical Store">Medical Store</option>
+                  <option value="Clothing Store">Clothing Store</option>
+                  <option value="Electronics Store">Electronics Store</option>
+                  <option value="Restaurant">Restaurant</option>
+                  <option value="Bakery">Bakery</option>
+                  <option value="Stationery Shop">Stationery Shop</option>
+                  <option value="Mobile Shop">Mobile Shop</option>
+                  <option value="Hardware Store">Hardware Store</option>
+                  <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div id="edit-custom-category-box" class="hidden flex flex-col gap-1">
+                <label for="edit-custom-category" class="text-label-md text-on-surface-variant font-medium">Custom Category</label>
+                <input id="edit-custom-category" type="text" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+
+              <div class="flex flex-col gap-1 sm:col-span-2">
+                <label for="edit-shop-desc" class="text-label-md text-on-surface-variant font-medium">Description</label>
+                <textarea id="edit-shop-desc" rows="2" class="w-full p-2.5 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none resize-none"></textarea>
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label for="edit-shop-mobile" class="text-label-md text-on-surface-variant font-medium">Shop Contact Mobile *</label>
+                <input id="edit-shop-mobile" type="tel" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white font-mono focus:border-indigo-500 focus:outline-none" />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label for="edit-shop-alt-phone" class="text-label-md text-on-surface-variant font-medium">Alternative Contact</label>
+                <input id="edit-shop-alt-phone" type="tel" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white font-mono focus:border-indigo-500 focus:outline-none" />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label for="edit-opening-time" class="text-label-md text-on-surface-variant font-medium">Opening Time</label>
+                <input id="edit-opening-time" type="time" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label for="edit-closing-time" class="text-label-md text-on-surface-variant font-medium">Closing Time</label>
+                <input id="edit-closing-time" type="time" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+
+              <div class="flex flex-col gap-1 sm:col-span-2">
+                <label for="edit-weekly-closing" class="text-label-md text-on-surface-variant font-medium">Weekly Closing Day</label>
+                <select id="edit-weekly-closing" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none cursor-pointer">
+                  <option value="None">None (Open 7 days)</option>
+                  <option value="Sunday">Sunday</option>
+                  <option value="Monday">Monday</option>
+                  <option value="Tuesday">Tuesday</option>
+                  <option value="Wednesday">Wednesday</option>
+                  <option value="Thursday">Thursday</option>
+                  <option value="Friday">Friday</option>
+                  <option value="Saturday">Saturday</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+              <button id="btn-save-shop-details" type="submit" class="px-6 h-10 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium flex items-center gap-1.5 cursor-pointer transition-all">
+                <span class="material-symbols-outlined text-[18px]">save</span>
+                <span>Save Changes</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 3 CONTENT: LOCATION & MAP -->
+        <div id="dash-pane-location" class="hidden flex flex-col gap-4 mt-2">
+          <form id="form-edit-location" class="flex flex-col gap-4 p-5 rounded-xl bg-surface-container-low border border-surface-container-high" onsubmit="event.preventDefault();">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                <span class="material-symbols-outlined text-indigo-400">pin_drop</span>
+                <span>Shop Location & Coordinates</span>
+              </h3>
+              <button id="dash-btn-current-loc" type="button" class="text-[12px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer">
+                <span class="material-symbols-outlined text-[16px]">my_location</span>
+                <span>Locate Me</span>
+              </button>
+            </div>
+
+            <!-- Map View for Location Editing -->
+            <div class="relative w-full h-[260px] rounded-xl overflow-hidden border border-surface-container-highest">
+              <div id="dash-edit-map-canvas" class="w-full h-full"></div>
+              <div class="absolute bottom-2 left-2 z-20 px-2 py-0.5 rounded bg-surface-container/90 text-[11px] font-mono text-white">
+                Drag marker to adjust location
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1 sm:col-span-2">
+                <label for="edit-address" class="text-label-md text-on-surface-variant font-medium">Street Address *</label>
+                <input id="edit-address" type="text" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label for="edit-landmark" class="text-label-md text-on-surface-variant font-medium">Landmark</label>
+                <input id="edit-landmark" type="text" class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label for="edit-city" class="text-label-md text-on-surface-variant font-medium">City *</label>
+                <input id="edit-city" type="text" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label for="edit-state" class="text-label-md text-on-surface-variant font-medium">State *</label>
+                <input id="edit-state" type="text" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label for="edit-pincode" class="text-label-md text-on-surface-variant font-medium">Pincode *</label>
+                <input id="edit-pincode" type="text" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white font-mono focus:border-indigo-500 focus:outline-none" />
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+              <button id="btn-save-location" type="submit" class="px-6 h-10 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium flex items-center gap-1.5 cursor-pointer transition-all">
+                <span class="material-symbols-outlined text-[18px]">pin_drop</span>
+                <span>Update Location Pin</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 4 CONTENT: ACCOUNT & SECURITY -->
+        <div id="dash-pane-security" class="hidden flex flex-col gap-5 mt-2">
+          
+          <!-- Owner Profile Details -->
+          <form id="form-edit-owner-profile" class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col gap-3" onsubmit="event.preventDefault();">
+            <h4 class="font-semibold text-white">Owner Profile</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1">
+                <label for="edit-owner-name" class="text-label-md text-on-surface-variant font-medium">Full Name</label>
+                <input id="edit-owner-name" type="text" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-label-md text-on-surface-variant font-medium">Email (Verified)</label>
+                <input id="view-owner-email" type="email" readonly class="w-full h-10 px-3 rounded-lg bg-surface-container/60 border border-surface-container-highest text-on-surface-variant font-mono" />
+              </div>
+            </div>
+            <div class="flex justify-end pt-1">
+              <button id="btn-save-owner-name" type="submit" class="px-4 h-9 rounded-lg bg-surface-container hover:bg-surface-container-high text-white text-[12px] font-medium cursor-pointer">
+                Save Name
+              </button>
+            </div>
+          </form>
+
+          <!-- Change Password Form -->
+          <form id="form-change-password" class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col gap-3" onsubmit="event.preventDefault();">
+            <h4 class="font-semibold text-white">Change Account Password</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="flex flex-col gap-1">
+                <label for="chg-curr-pwd" class="text-label-md text-on-surface-variant font-medium">Current Password</label>
+                <input id="chg-curr-pwd" type="password" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label for="chg-new-pwd" class="text-label-md text-on-surface-variant font-medium">New Password</label>
+                <input id="chg-new-pwd" type="password" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label for="chg-conf-pwd" class="text-label-md text-on-surface-variant font-medium">Confirm New Password</label>
+                <input id="chg-conf-pwd" type="password" required class="w-full h-10 px-3 rounded-lg bg-surface-container border border-surface-container-highest text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+            </div>
+            <div class="flex justify-end pt-1">
+              <button id="btn-submit-change-pwd" type="submit" class="px-5 h-9 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[12px] font-medium cursor-pointer">
+                Update Password
+              </button>
+            </div>
+          </form>
+
+          <!-- Active Sessions Section -->
+          <div class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="font-semibold text-white">Active Login Sessions</h4>
+                <p class="text-[12px] text-on-surface-variant">Devices currently logged into this shop account.</p>
+              </div>
+              <button id="btn-logout-all-devices" type="button" class="px-3 h-8 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 text-[11px] font-medium cursor-pointer">
+                Logout All Other Devices
+              </button>
+            </div>
+            <div id="active-sessions-list" class="flex flex-col divide-y divide-surface-container-high">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Account Deactivation Zone -->
+          <div class="p-4 rounded-xl bg-red-950/20 border border-red-500/30 flex items-center justify-between">
+            <div>
+              <h4 class="font-semibold text-red-400">Deactivate Account</h4>
+              <p class="text-[12px] text-on-surface-variant">Temporarily disable your shop access and active sessions.</p>
+            </div>
+            <button id="btn-deactivate-account" type="button" class="px-3.5 h-9 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[12px] font-medium cursor-pointer">
+              Deactivate
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- VIEW 8: SYSTEM ADMIN PORTAL                                      -->
+      <!-- ================================================================ -->
+      <div id="view-admin" class="hidden flex flex-col w-full max-w-4xl mx-auto px-margin pb-20">
+
+        <!-- Admin Header -->
+        <div class="mt-4 p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 flex items-center justify-between flex-wrap gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center">
+              <span class="material-symbols-outlined text-[24px]">shield_person</span>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-white">Platform Administration</h2>
+              <p class="text-[12px] text-amber-300/80">System-wide monitoring, shop verification & security audit logs</p>
+            </div>
+          </div>
+          <button id="btn-exit-admin" type="button" class="px-3 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high text-white text-[12px] font-medium cursor-pointer">
+            Exit Admin Mode
+          </button>
+        </div>
+
+        <!-- System Metrics Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4">
+          <div class="p-3.5 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col">
+            <span class="text-[11px] font-medium text-on-surface-variant uppercase">Shop Owners</span>
+            <span id="adm-metric-owners" class="text-2xl font-bold font-mono text-white mt-1">0</span>
+          </div>
+          <div class="p-3.5 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col">
+            <span class="text-[11px] font-medium text-on-surface-variant uppercase">Total Shops</span>
+            <span id="adm-metric-shops" class="text-2xl font-bold font-mono text-indigo-400 mt-1">0</span>
+          </div>
+          <div class="p-3.5 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col">
+            <span class="text-[11px] font-medium text-on-surface-variant uppercase">Pending Review</span>
+            <span id="adm-metric-pending" class="text-2xl font-bold font-mono text-amber-400 mt-1">0</span>
+          </div>
+          <div class="p-3.5 rounded-xl bg-surface-container-low border border-surface-container-high flex flex-col">
+            <span class="text-[11px] font-medium text-on-surface-variant uppercase">Active Customers</span>
+            <span id="adm-metric-customers" class="text-2xl font-bold font-mono text-green-400 mt-1">0</span>
+          </div>
+        </div>
+
+        <!-- Admin Tabs -->
+        <div class="flex items-center gap-2 border-b border-surface-container-high pb-2 mb-4 text-body-sm">
+          <button id="adm-tab-owners" type="button" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-medium cursor-pointer">Shop Owners</button>
+          <button id="adm-tab-shops" type="button" class="px-3 py-1.5 rounded-lg text-on-surface-variant hover:text-white font-medium cursor-pointer">Shops List</button>
+          <button id="adm-tab-logs" type="button" class="px-3 py-1.5 rounded-lg text-on-surface-variant hover:text-white font-medium cursor-pointer">Security Audit Logs</button>
+        </div>
+
+        <!-- SEARCH & FILTER TOOLBAR -->
+        <div id="adm-filter-toolbar" class="flex flex-col sm:flex-row gap-2 mb-4">
+          <div class="relative flex-1">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[16px]">search</span>
+            <input id="adm-search-input" type="text" placeholder="Search by name, email, phone..." class="w-full h-9 pl-9 pr-3 rounded-lg bg-surface-container-low border border-surface-container-high text-white text-body-sm focus:border-indigo-500 focus:outline-none" />
+          </div>
+          <select id="adm-filter-status" class="h-9 px-2.5 rounded-lg bg-surface-container-low border border-surface-container-high text-on-surface text-body-sm cursor-pointer">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+            <option value="deactivated">Deactivated</option>
+          </select>
+        </div>
+
+        <!-- SECTION A: SHOP OWNERS TABLE -->
+        <div id="adm-pane-owners" class="w-full rounded-xl bg-surface-container-low border border-surface-container-high overflow-x-auto">
+          <table class="w-full text-left text-body-sm">
+            <thead class="bg-surface-container text-on-surface-variant text-[11px] uppercase tracking-wider border-b border-surface-container-high">
+              <tr>
+                <th class="p-3">Owner</th>
+                <th class="p-3">Contact</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">Joined</th>
+                <th class="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adm-owners-tbody" class="divide-y divide-surface-container-high">
+              <tr>
+                <td colspan="5" class="p-6 text-center text-on-surface-variant">Loading shop owners...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- SECTION B: SHOPS TABLE -->
+        <div id="adm-pane-shops" class="hidden w-full rounded-xl bg-surface-container-low border border-surface-container-high overflow-x-auto">
+          <table class="w-full text-left text-body-sm">
+            <thead class="bg-surface-container text-on-surface-variant text-[11px] uppercase tracking-wider border-b border-surface-container-high">
+              <tr>
+                <th class="p-3">Shop Name</th>
+                <th class="p-3">Category</th>
+                <th class="p-3">City</th>
+                <th class="p-3">Verification</th>
+                <th class="p-3 text-right">Verify Action</th>
+              </tr>
+            </thead>
+            <tbody id="adm-shops-tbody" class="divide-y divide-surface-container-high">
+              <tr>
+                <td colspan="5" class="p-6 text-center text-on-surface-variant">Loading shops...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- SECTION C: AUDIT LOGS TABLE -->
+        <div id="adm-pane-logs" class="hidden w-full rounded-xl bg-surface-container-low border border-surface-container-high overflow-x-auto">
+          <table class="w-full text-left text-body-sm">
+            <thead class="bg-surface-container text-on-surface-variant text-[11px] uppercase tracking-wider border-b border-surface-container-high">
+              <tr>
+                <th class="p-3">Timestamp</th>
+                <th class="p-3">Action</th>
+                <th class="p-3">Actor Email</th>
+                <th class="p-3">IP Address</th>
+                <th class="p-3">Details</th>
+              </tr>
+            </thead>
+            <tbody id="adm-logs-tbody" class="divide-y divide-surface-container-high">
+              <tr>
+                <td colspan="5" class="p-6 text-center text-on-surface-variant">Loading security audit logs...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
     </main>
 
   </div>
 
-  <script src="/static/app.js?v=2.3"></script>
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+  <!-- Application Logic -->
+  <script src="/static/app.js?v=3.0"></script>
 </body>
 </html>

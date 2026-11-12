@@ -10,16 +10,26 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlmodel import Session
 
+from app.admin_router import router as admin_router
 from app.audio import convert_to_wav
-from app.config import SHOP_NAME
+from app.auth_router import get_optional_owner, router as auth_router
+from app.config import (
+    ADMIN_EMAIL,
+    ADMIN_PASSWORD,
+    GOOGLE_MAPS_API_KEY,
+    SHOP_NAME,
+)
 from app.db import (
     Customer,
     Entry,
+    Shop,
+    ShopOwner,
     add_entry,
     compute_balance,
     create_db_and_tables,
     delete_customer,
     delete_entry,
+    engine,
     find_customer,
     find_or_create_customer,
     get_customers_with_balance,
@@ -29,12 +39,33 @@ from app.db import (
 from app.gnani import speech_to_text, text_to_speech
 from app.invoice import generate_invoice
 from app.parser import parse
+from app.security import hash_password
+from app.shop_router import router as shop_router
+from sqlmodel import select
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Ensure database tables exist on startup
     create_db_and_tables()
+
+    # Seed initial administrator account if absent
+    with Session(engine) as session:
+        existing_admin = session.exec(select(ShopOwner).where(ShopOwner.role == "admin")).first()
+        if not existing_admin:
+            clean_email = ADMIN_EMAIL.strip().lower()
+            admin = ShopOwner(
+                full_name="System Administrator",
+                email=clean_email,
+                mobile_number="+919999999999",
+                password_hash=hash_password(ADMIN_PASSWORD),
+                email_verified=True,
+                phone_verified=True,
+                account_status="active",
+                role="admin",
+            )
+            session.add(admin)
+            session.commit()
     yield
 
 
@@ -50,15 +81,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Register routers
+app.include_router(auth_router)
+app.include_router(shop_router)
+app.include_router(admin_router)
+
 # ---------------------------------------------------------------------------
 # Request/Response Schemas
 # ---------------------------------------------------------------------------
 
 class EntryCreate(BaseModel):
-    customer: str
+    customer: Optional[str] = None
+    customer_name: Optional[str] = None
     amount: float
     kind: str  # "credit" | "cash" | "payment"
     item: Optional[str] = None
+    item_name: Optional[str] = None
     quantity: Optional[float] = None
     unit: Optional[str] = None
     raw_transcript: Optional[str] = None
@@ -83,7 +121,19 @@ def health():
 
 @app.get("/api/config")
 def get_config():
-    return {"shop_name": SHOP_NAME}
+    return {
+        "shop_name": SHOP_NAME,
+        "google_maps_api_key": GOOGLE_MAPS_API_KEY,
+    }
+
+
+@app.get("/api/config/maps")
+def get_maps_config():
+    return {
+        "apiKey": GOOGLE_MAPS_API_KEY,
+        "google_maps_api_key": GOOGLE_MAPS_API_KEY,
+        "has_maps_key": bool(GOOGLE_MAPS_API_KEY),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -185,9 +235,10 @@ def parse_transcript_text(
 def create_entry(
     payload: EntryCreate,
     session: Session = Depends(get_session),
+    optional_owner: Optional[ShopOwner] = Depends(get_optional_owner),
 ):
     """Validate entry, find/create customer, save entry, and return updated balance."""
-    customer_name = payload.customer.strip()
+    customer_name = (payload.customer or payload.customer_name or "").strip()
     if not customer_name:
         raise HTTPException(status_code=422, detail="Customer name is required.")
 
@@ -201,21 +252,28 @@ def create_entry(
         )
 
     # Item is required unless kind is payment
+    item_val = (payload.item or payload.item_name or "").strip()
     if payload.kind != "payment":
-        if not payload.item or not payload.item.strip():
+        if not item_val:
             raise HTTPException(
                 status_code=422,
                 detail="Item is required unless type is payment.",
             )
 
-    customer = find_or_create_customer(session, customer_name)
+    shop_id = None
+    if optional_owner:
+        shop = session.exec(select(Shop).where(Shop.owner_id == optional_owner.id)).first()
+        if shop:
+            shop_id = shop.id
+
+    customer = find_or_create_customer(session, customer_name, shop_id=shop_id)
 
     entry = add_entry(
         session=session,
         customer_id=customer.id,  # type: ignore[arg-type]
         amount=payload.amount,
         kind=payload.kind,
-        item=payload.item.strip() if payload.item else None,
+        item=item_val if item_val else None,
         quantity=payload.quantity,
         unit=payload.unit,
         raw_transcript=payload.raw_transcript,
@@ -226,13 +284,22 @@ def create_entry(
     return {
         "entry": entry,
         "balance": updated_balance,
+        "customer_id": customer.id,
     }
 
 
 @app.get("/api/customers")
-def list_customers(session: Session = Depends(get_session)):
+def list_customers(
+    session: Session = Depends(get_session),
+    optional_owner: Optional[ShopOwner] = Depends(get_optional_owner),
+):
     """List customers with balance and last_activity."""
-    return get_customers_with_balance(session)
+    shop_id = None
+    if optional_owner:
+        shop = session.exec(select(Shop).where(Shop.owner_id == optional_owner.id)).first()
+        if shop:
+            shop_id = shop.id
+    return get_customers_with_balance(session, shop_id=shop_id)
 
 
 @app.get("/api/customers/{id}/entries")

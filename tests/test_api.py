@@ -21,26 +21,8 @@ from app.main import app
 from app.audio import convert_to_wav
 
 
-from sqlalchemy.pool import StaticPool
+from tests.conftest import shared_engine as test_engine
 
-# ---------------------------------------------------------------------------
-# Test Fixtures & In-Memory DB
-# ---------------------------------------------------------------------------
-
-test_engine = create_engine(
-    "sqlite://",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-create_db_and_tables(test_engine)
-
-
-def override_get_session():
-    with Session(test_engine) as session:
-        yield session
-
-
-app.dependency_overrides[get_session] = override_get_session
 client = TestClient(app)
 
 
